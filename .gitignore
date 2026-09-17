@@ -47,3 +47,9 @@ Thumbs.db
 
 # Vite cache
 .vite/
+
+# Datasets & Raw Data
+*.xlsx
+*.xls
+Tamil_Nadu_Groundwater_Level_Dataset_2024_25.xlsx
+data/*.xlsx
