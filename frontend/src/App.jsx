@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import LandingPage from './components/LandingPage';
+import FarmerDashboard from './components/FarmerDashboard';
 import Navbar from './components/Navbar';
 import KpiMetrics from './components/KpiMetrics';
 import GroundwaterMap from './components/GroundwaterMap';
@@ -7,16 +9,38 @@ import StationsTable from './components/StationsTable';
 import SeasonalTrendsChart from './components/SeasonalTrendsChart';
 import RoadmapVision from './components/RoadmapVision';
 import StationDetailModal from './components/StationDetailModal';
+import { Home, Sprout, Building2, Sun, Moon } from 'lucide-react';
 
-// Import processed dataset
+// Import processed CGWB dataset
 import dataset from './data/groundwater_dataset.json';
 
 export default function App() {
+  // Client URL Route handling: '/' | '/users/:userId' | '/government'
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
+  
+  // Government dashboard internal tabs
   const [activeTab, setActiveTab] = useState('map'); // 'map' | 'analytics' | 'table' | 'rainfall' | 'roadmap'
   const [theme, setTheme] = useState('dark');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('ALL');
   const [selectedStation, setSelectedStation] = useState(null);
+  const [searchedLocation, setSearchedLocation] = useState(null);
+
+  // Sync browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname || '/');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Smooth URL navigation helper
+  const navigateTo = (path) => {
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Toggle Dark/Light Theme
   const toggleTheme = () => {
@@ -29,7 +53,36 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', 'dark');
   }, []);
 
+  // Ensure white background applies ONLY for the landing page
+  useEffect(() => {
+    const isLanding = currentPath === '/' || currentPath === '';
+    if (isLanding) {
+      document.body.classList.add('landing-page-white');
+    } else {
+      document.body.classList.remove('landing-page-white');
+    }
+    return () => {
+      document.body.classList.remove('landing-page-white');
+    };
+  }, [currentPath]);
+
   const { stateStats, districts, wells } = dataset;
+
+  // Handler when a user selects a location from the search bar (station, district, or open-source place)
+  const handleSelectLocation = (item) => {
+    if (!item) return;
+
+    if (item.type === 'station') {
+      setSelectedStation(item.station);
+      setActiveTab('map');
+    } else if (item.type === 'district') {
+      setSelectedDistrict(item.name);
+      setActiveTab('map');
+    } else if (item.type === 'place') {
+      setSearchedLocation(item);
+      setActiveTab('map');
+    }
+  };
 
   // Filtered wells count based on search or district
   const filteredWellsCount = useMemo(() => {
@@ -55,9 +108,118 @@ export default function App() {
     setActiveTab('map');
   };
 
+  // ==========================================
+  // ROUTE 1: Landing Page (Exclusive White Theme)
+  // ==========================================
+  if (currentPath === '/' || currentPath === '') {
+    return (
+      <div className="landing-page-root">
+        <LandingPage onNavigate={navigateTo} />
+      </div>
+    );
+  }
+
+  // ==========================================
+  // ROUTE 2: Farmer IoT Dashboard (/users/:userId)
+  // ==========================================
+  if (currentPath.startsWith('/users/')) {
+    const rawUserId = currentPath.replace('/users/', '').split('/')[0] || 'selvam-thanjavur';
+    return (
+      <div className="app-container">
+        {/* Global Breadcrumb & Role Switcher */}
+        <div className="glass-card" style={{ 
+          padding: '0.5rem 1rem', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          fontSize: '0.78rem', 
+          background: 'rgba(15, 23, 42, 0.9)',
+          borderRadius: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button 
+              onClick={() => navigateTo('/')} 
+              style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}
+            >
+              <Home size={14} /> Home
+            </button>
+            <span style={{ color: 'var(--text-muted)' }}>/</span>
+            <span style={{ color: '#34d399', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Sprout size={14} /> Farmer Portal (/users/{rawUserId})
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button 
+              className="btn btn-water" 
+              style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              onClick={() => navigateTo('/government')}
+            >
+              <Building2 size={13} />
+              <span>Government Hub</span>
+            </button>
+            <button 
+              className="btn btn-secondary"
+              onClick={toggleTheme}
+              style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem' }}
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={14} color="#f59e0b" /> : <Moon size={14} color="#0ea5e9" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Farmer Dashboard Body */}
+        <FarmerDashboard 
+          userId={rawUserId} 
+          onNavigate={navigateTo} 
+          theme={theme} 
+        />
+      </div>
+    );
+  }
+
+  // ==========================================
+  // ROUTE 3: State Government Hub (/government)
+  // ==========================================
   return (
     <div className="app-container">
       
+      {/* Top Breadcrumb Ribbon */}
+      <div className="glass-card" style={{ 
+        padding: '0.5rem 1rem', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        fontSize: '0.78rem', 
+        background: 'rgba(15, 23, 42, 0.9)',
+        borderRadius: '10px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <button 
+            onClick={() => navigateTo('/')} 
+            style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}
+          >
+            <Home size={14} /> Home
+          </button>
+          <span style={{ color: 'var(--text-muted)' }}>/</span>
+          <span style={{ color: '#38bdf8', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Building2 size={14} /> State Government Groundwater Command Hub
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <button 
+            className="btn btn-green" 
+            style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            onClick={() => navigateTo('/users/selvam-thanjavur')}
+          >
+            <Sprout size={13} />
+            <span>Launch Farmer Portal (Demo)</span>
+          </button>
+        </div>
+      </div>
+
       {/* Navigation Header */}
       <Navbar
         activeTab={activeTab}
@@ -68,6 +230,9 @@ export default function App() {
         setSearchQuery={setSearchQuery}
         totalWells={wells.length}
         districtsCount={districts.length}
+        wells={wells}
+        districts={districts}
+        onSelectLocation={handleSelectLocation}
       />
 
       {/* KPI Overview Metrics (Always visible at top) */}
@@ -92,6 +257,8 @@ export default function App() {
             setSelectedDistrict={setSelectedDistrict}
             onSelectStation={setSelectedStation}
             searchQuery={searchQuery}
+            searchedLocation={searchedLocation}
+            setSearchedLocation={setSearchedLocation}
           />
         )}
 

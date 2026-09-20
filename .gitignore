@@ -1,14 +1,61 @@
-# Dependencies
+# ==============================================================================
+# Environment Variables & Secrets (CRITICAL)
+# ==============================================================================
+.env
+.env.*
+*.env
+!.env.example
+*.local
+
+# Secrets, Private Keys & Credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+*.asc
+credentials.json
+client_secret*.json
+serviceAccountKey*.json
+
+# ==============================================================================
+# Dependencies & Package Managers
+# ==============================================================================
 node_modules/
 .pnp
 .pnp.js
 
+# ==============================================================================
 # Production & Build Outputs
+# ==============================================================================
 dist/
 build/
-*.local
+out/
+.vite/
+.next/
 
-# Python / Data processing
+# ==============================================================================
+# Datasets, Spreadsheets & Databases
+# ==============================================================================
+*.xlsx
+*.xls
+*.csv
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql
+Tamil_Nadu_Groundwater_Level_Dataset_2024_25.xlsx
+data/*.xlsx
+
+# ==============================================================================
+# Python / Machine Learning / Data Processing
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,15 +65,13 @@ env/
 venv/
 .venv/
 ENV/
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Environment Variables & Secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
+# ==============================================================================
+# Logs & Diagnostics
+# ==============================================================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -34,9 +79,12 @@ pnpm-debug.log*
 lerna-debug.log*
 *.log
 
-# Editor & OS files
+# ==============================================================================
+# Editor & OS Metadata
+# ==============================================================================
 .DS_Store
 Thumbs.db
+desktop.ini
 .idea/
 .vscode/
 *.suo
@@ -44,12 +92,3 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
-
-# Vite cache
-.vite/
-
-# Datasets & Raw Data
-*.xlsx
-*.xls
-Tamil_Nadu_Groundwater_Level_Dataset_2024_25.xlsx
-data/*.xlsx

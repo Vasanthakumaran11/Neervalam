@@ -12,8 +12,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Compass,
-  Search
+  Search,
+  MapPinned
 } from 'lucide-react';
+import { findNearestWellStation } from '../services/geocodingService';
 
 // Custom Map Controller to smoothly fly to selected coordinates/district
 function MapController({ center, zoom }) {
@@ -29,7 +31,7 @@ function MapController({ center, zoom }) {
   return null;
 }
 
-// Function to generate custom colorful SVG marker icons
+// Function to generate custom colorful SVG marker icons for wells
 function createCustomMarkerIcon(color, level) {
   const displayVal = level !== null && level !== undefined ? Number(level).toFixed(1) : '?';
   const svg = `
@@ -57,28 +59,60 @@ function createCustomMarkerIcon(color, level) {
   });
 }
 
+// Function to generate distinctive pulsing marker for searched Tamil Nadu locations
+function createSearchedLocationIcon() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 54" width="40" height="48">
+      <defs>
+        <radialGradient id="searchedGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#0284c7" stop-opacity="0.1"/>
+        </radialGradient>
+        <filter id="pulseShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0ea5e9" flood-opacity="0.8"/>
+        </filter>
+      </defs>
+      <circle cx="22" cy="46" r="8" fill="url(#searchedGlow)"/>
+      <path d="M22 2 C11 2 2 11 2 22 C2 35 22 52 22 52 C22 52 42 35 42 22 C42 11 33 2 22 2 Z" 
+            fill="#0ea5e9" 
+            stroke="#ffffff" 
+            stroke-width="2.5" 
+            filter="url(#pulseShadow)"/>
+      <circle cx="22" cy="22" r="9" fill="#0f172a" stroke="#ffffff" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="4" fill="#38bdf8"/>
+    </svg>
+  `;
+  return L.divIcon({
+    html: svg,
+    className: 'custom-leaflet-searched-marker',
+    iconSize: [40, 48],
+    iconAnchor: [20, 48],
+    popupAnchor: [0, -48]
+  });
+}
+
 export default function GroundwaterMap({ 
   wells, 
   districts, 
   selectedDistrict, 
   setSelectedDistrict, 
   onSelectStation,
-  searchQuery 
+  searchQuery,
+  searchedLocation,
+  setSearchedLocation
 }) {
-  const [mapTile, setMapTile] = useState('dark'); // 'dark' | 'streets' | 'satellite'
+  const [mapTile, setMapTile] = useState('streets'); // 'streets' | 'satellite'
   const [selectedDepthBracket, setSelectedDepthBracket] = useState(null); // null by default - markers hidden initially
   const [mapCenter, setMapCenter] = useState([11.1271, 78.6569]);
   const [mapZoom, setMapZoom] = useState(7);
 
   // Map Tile Layers
   const tileUrls = {
-    dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     streets: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
   };
 
   const tileAttributions = {
-    dark: '&copy; CartoDB &copy; OpenStreetMap contributors',
     streets: '&copy; OpenStreetMap contributors',
     satellite: '&copy; Esri &mdash; Earthstar Geographics'
   };
@@ -118,6 +152,20 @@ export default function GroundwaterMap({
       return true;
     });
   }, [wells, selectedDistrict, selectedDepthBracket, searchQuery]);
+
+  // Nearest well station to searched location
+  const nearestWellToSearch = useMemo(() => {
+    if (!searchedLocation || !searchedLocation.lat || !searchedLocation.lon) return null;
+    return findNearestWellStation(searchedLocation.lat, searchedLocation.lon, wells);
+  }, [searchedLocation, wells]);
+
+  // When searched location changes, fly directly to it at close zoom
+  useEffect(() => {
+    if (searchedLocation && searchedLocation.lat && searchedLocation.lon) {
+      setMapCenter([searchedLocation.lat, searchedLocation.lon]);
+      setMapZoom(13);
+    }
+  }, [searchedLocation]);
 
   // When district changes, reposition map center
   useEffect(() => {
@@ -185,13 +233,6 @@ export default function GroundwaterMap({
           {/* Map Layer Switcher */}
           <div style={{ display: 'flex', background: '#1e293b', padding: '0.2rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
             <button 
-              className={`btn btn-tab ${mapTile === 'dark' ? 'active' : ''}`}
-              style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
-              onClick={() => setMapTile('dark')}
-            >
-              Dark
-            </button>
-            <button 
               className={`btn btn-tab ${mapTile === 'streets' ? 'active' : ''}`}
               style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
               onClick={() => setMapTile('streets')}
@@ -214,6 +255,7 @@ export default function GroundwaterMap({
             onClick={() => {
               setSelectedDistrict('ALL');
               setSelectedDepthBracket(null); // Reset back to default hidden markings
+              if (setSearchedLocation) setSearchedLocation(null);
               setMapCenter([11.1271, 78.6569]);
               setMapZoom(7);
             }}
@@ -224,6 +266,54 @@ export default function GroundwaterMap({
           </button>
         </div>
       </div>
+
+      {/* Searched Location Notification Ribbon */}
+      {searchedLocation && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0.65rem 1rem',
+          background: 'linear-gradient(90deg, rgba(14, 165, 233, 0.22) 0%, rgba(56, 189, 248, 0.08) 100%)',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
+          borderRadius: '10px',
+          fontSize: '0.82rem',
+          flexWrap: 'wrap',
+          gap: '0.6rem',
+          animation: 'fadeIn 0.25s ease-out'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <MapPinned size={18} color="var(--cyan-primary)" />
+            <span>
+              <strong>Pinpointed Location:</strong> {searchedLocation.name} {searchedLocation.displayName ? `· ${searchedLocation.displayName}` : ''}
+            </span>
+            {nearestWellToSearch && (
+              <span className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>
+                Nearest Well: {nearestWellToSearch.location} ({nearestWellToSearch.distanceKm} km · {nearestWellToSearch.latestLevel}m bgl)
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem' }}
+              onClick={() => {
+                setMapCenter([searchedLocation.lat, searchedLocation.lon]);
+                setMapZoom(13);
+              }}
+            >
+              Recenter
+            </button>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', color: '#f87171' }}
+              onClick={() => setSearchedLocation && setSearchedLocation(null)}
+            >
+              ✕ Clear Location Pin
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Depth Category Quick Filter Badges */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.5rem 0.85rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
@@ -360,6 +450,73 @@ export default function GroundwaterMap({
             attribution={tileAttributions[mapTile]}
             url={tileUrls[mapTile]}
           />
+
+          {/* Searched Tamil Nadu Place Marker */}
+          {searchedLocation && searchedLocation.lat && searchedLocation.lon && (
+            <Marker
+              position={[searchedLocation.lat, searchedLocation.lon]}
+              icon={createSearchedLocationIcon()}
+              zIndexOffset={1000}
+            >
+              <Popup autoPan={true}>
+                <div style={{ minWidth: '240px', padding: '0.35rem' }}>
+                  <div style={{ borderBottom: '1px solid rgba(56, 189, 248, 0.3)', paddingBottom: '0.45rem', marginBottom: '0.6rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--cyan-primary)', fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase' }}>
+                      <MapPinned size={14} /> Open-Source Tamil Nadu Place
+                    </div>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f8fafc', margin: '0.2rem 0' }}>
+                      {searchedLocation.name}
+                    </h4>
+                    {searchedLocation.displayName && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.3' }}>
+                        {searchedLocation.displayName}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem', fontFamily: 'monospace' }}>
+                      {searchedLocation.lat.toFixed(4)}°N, {searchedLocation.lon.toFixed(4)}°E
+                    </div>
+                  </div>
+
+                  {nearestWellToSearch ? (
+                    <div style={{ background: 'rgba(15, 23, 42, 0.85)', padding: '0.6rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', marginBottom: '0.6rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                          NEAREST CGWB WELL
+                        </span>
+                        <span className="badge badge-cyan" style={{ fontSize: '0.65rem' }}>
+                          {nearestWellToSearch.distanceKm} km away
+                        </span>
+                      </div>
+                      <div style={{ fontWeight: '700', fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                        {nearestWellToSearch.location} ({nearestWellToSearch.district})
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Water Level:</span>
+                        <span style={{ fontWeight: '800', color: nearestWellToSearch.color, fontSize: '0.88rem' }}>
+                          {nearestWellToSearch.latestLevel !== null ? `${nearestWellToSearch.latestLevel}m bgl` : 'No Data'}
+                        </span>
+                      </div>
+                      <button
+                        className="btn btn-primary"
+                        style={{ width: '100%', marginTop: '0.5rem', padding: '0.35rem', fontSize: '0.75rem' }}
+                        onClick={() => onSelectStation(nearestWellToSearch)}
+                      >
+                        <Eye size={13} /> View Well Hydrograph
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <button
+                    className="btn btn-secondary"
+                    style={{ width: '100%', padding: '0.3rem', fontSize: '0.72rem', color: '#f87171' }}
+                    onClick={() => setSearchedLocation && setSearchedLocation(null)}
+                  >
+                    ✕ Dismiss Pin
+                  </button>
+                </div>
+              </Popup>
+            </Marker>
+          )}
 
           {filteredWells.map(well => {
             const icon = createCustomMarkerIcon(well.color, well.latestLevel);
