@@ -13,7 +13,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function LandingPage({ onNavigate }) {
+export default function LandingPage({ onNavigate, onLoginClick, isAuthenticated, userRole }) {
   return (
     <div style={{ 
       color: '#1e293b', 
@@ -129,58 +129,52 @@ export default function LandingPage({ onNavigate }) {
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-            <button 
-              onClick={() => onNavigate && onNavigate('/users/selvam-thanjavur')}
-              style={{ 
-                background: '#ffffff', 
-                color: '#0f3b32', 
-                border: '1.5px solid #cbd5e1', 
-                borderRadius: '999px', 
-                padding: '0.5rem 1.25rem', 
-                fontSize: '0.85rem', 
-                fontWeight: '600', 
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.borderColor = '#10b981';
-                e.currentTarget.style.background = '#f0fdf4';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.borderColor = '#cbd5e1';
-                e.currentTarget.style.background = '#ffffff';
-              }}
-            >
-              Login
-            </button>
-            
-            <button 
-              onClick={() => onNavigate && onNavigate('/government')}
-              style={{ 
-                background: 'linear-gradient(135deg, #196342 0%, #15803d 100%)', 
-                color: '#ffffff', 
-                border: 'none', 
-                borderRadius: '999px', 
-                padding: '0.55rem 1.4rem', 
-                fontSize: '0.85rem', 
-                fontWeight: '600', 
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(25, 99, 66, 0.28)',
-                transition: 'all 0.2s ease',
-                whiteSpace: 'nowrap'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 6px 18px rgba(25, 99, 66, 0.38)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 14px rgba(25, 99, 66, 0.28)';
-              }}
-            >
-              Get Started
-            </button>
+            {isAuthenticated ? (
+              // Already logged in — show Go to Dashboard
+              <button
+                onClick={() => onNavigate && onNavigate(userRole === 'government_official' ? '/government' : '/users/selvam-thanjavur')}
+                style={{
+                  background: 'linear-gradient(135deg, #196342 0%, #15803d 100%)',
+                  color: '#ffffff', border: 'none', borderRadius: '999px',
+                  padding: '0.55rem 1.4rem', fontSize: '0.85rem', fontWeight: '700',
+                  cursor: 'pointer', boxShadow: '0 4px 14px rgba(25, 99, 66, 0.28)',
+                  transition: 'all 0.2s ease', whiteSpace: 'nowrap'
+                }}
+              >
+                Go to Dashboard →
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => onLoginClick && onLoginClick()}
+                  style={{
+                    background: '#ffffff', color: '#0f3b32',
+                    border: '1.5px solid #cbd5e1', borderRadius: '999px',
+                    padding: '0.5rem 1.25rem', fontSize: '0.85rem', fontWeight: '600',
+                    cursor: 'pointer', transition: 'all 0.2s ease',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.background = '#f0fdf4'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#ffffff'; }}
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => onLoginClick && onLoginClick()}
+                  style={{
+                    background: 'linear-gradient(135deg, #196342 0%, #15803d 100%)',
+                    color: '#ffffff', border: 'none', borderRadius: '999px',
+                    padding: '0.55rem 1.4rem', fontSize: '0.85rem', fontWeight: '600',
+                    cursor: 'pointer', boxShadow: '0 4px 14px rgba(25, 99, 66, 0.28)',
+                    transition: 'all 0.2s ease', whiteSpace: 'nowrap'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(25, 99, 66, 0.38)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(25, 99, 66, 0.28)'; }}
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -211,40 +205,27 @@ export default function LandingPage({ onNavigate }) {
             </p>
 
             <div className="landing-hero-buttons">
-              <button 
-                onClick={() => onNavigate && onNavigate('/users/selvam-thanjavur')}
+              <button
+                onClick={() => onLoginClick && onLoginClick()}
                 style={{
-                  background: '#196342',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '999px',
-                  padding: '0.8rem 1.75rem',
-                  fontSize: '0.92rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  boxShadow: '0 4px 14px rgba(25, 99, 66, 0.3)',
-                  transition: 'all 0.2s ease'
+                  background: '#196342', color: '#ffffff',
+                  border: 'none', borderRadius: '999px',
+                  padding: '0.8rem 1.75rem', fontSize: '0.92rem', fontWeight: '600',
+                  cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                  boxShadow: '0 4px 14px rgba(25, 99, 66, 0.3)', transition: 'all 0.2s ease'
                 }}
               >
-                <span>Get Started</span>
+                <span>{isAuthenticated ? 'Go to Dashboard' : 'Get Started'}</span>
                 <ArrowRight size={16} />
               </button>
 
-              <button 
+              <button
                 onClick={() => onNavigate && onNavigate('/government')}
                 style={{
-                  background: '#ffffff',
-                  color: '#334155',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '999px',
-                  padding: '0.8rem 1.75rem',
-                  fontSize: '0.92rem',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  background: '#ffffff', color: '#334155',
+                  border: '1.5px solid #cbd5e1', borderRadius: '999px',
+                  padding: '0.8rem 1.75rem', fontSize: '0.92rem', fontWeight: '600',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
                 }}
               >
                 Learn More

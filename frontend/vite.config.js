@@ -6,6 +6,20 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    open: false
+    open: false,
+    proxy: {
+      // Proxy /api/* → FastAPI backend on :8000
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      // Proxy /health → FastAPI backend on :8000
+      '/health': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    }
   }
 })
+

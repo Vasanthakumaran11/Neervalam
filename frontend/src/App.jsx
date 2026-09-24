@@ -9,28 +9,34 @@ import StationsTable from './components/StationsTable';
 import SeasonalTrendsChart from './components/SeasonalTrendsChart';
 import RoadmapVision from './components/RoadmapVision';
 import StationDetailModal from './components/StationDetailModal';
-import { Home, Sprout, Building2, Sun, Moon } from 'lucide-react';
+import LoginModal from './components/LoginModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Home, Sprout, Building2, Sun, Moon, LogOut, User } from 'lucide-react';
 
 // Import processed CGWB dataset
 import dataset from './data/groundwater_dataset.json';
 
-export default function App() {
-  // Client URL Route handling: '/' | '/users/:userId' | '/government'
+// ─── Inner App (has access to AuthContext) ────────────────────────────────────
+function AppInner() {
+  const { user, role, isAuthenticated, logout, isLoading } = useAuth();
+
+  // Client URL Route handling
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
-  
+
   // Government dashboard internal tabs
-  const [activeTab, setActiveTab] = useState('map'); // 'map' | 'analytics' | 'table' | 'rainfall' | 'roadmap'
+  const [activeTab, setActiveTab] = useState('map');
   const [theme, setTheme] = useState('dark');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('ALL');
   const [selectedStation, setSelectedStation] = useState(null);
   const [searchedLocation, setSearchedLocation] = useState(null);
 
-  // Sync browser back/forward buttons
+  // Login modal state
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+  // Sync browser back/forward
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname || '/');
-    };
+    const handlePopState = () => setCurrentPath(window.location.pathname || '/');
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
@@ -53,7 +59,7 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', 'dark');
   }, []);
 
-  // Ensure white background applies ONLY for the landing page
+  // Landing page white background
   useEffect(() => {
     const isLanding = currentPath === '/' || currentPath === '';
     if (isLanding) {
@@ -61,30 +67,18 @@ export default function App() {
     } else {
       document.body.classList.remove('landing-page-white');
     }
-    return () => {
-      document.body.classList.remove('landing-page-white');
-    };
+    return () => document.body.classList.remove('landing-page-white');
   }, [currentPath]);
 
   const { stateStats, districts, wells } = dataset;
 
-  // Handler when a user selects a location from the search bar (station, district, or open-source place)
   const handleSelectLocation = (item) => {
     if (!item) return;
-
-    if (item.type === 'station') {
-      setSelectedStation(item.station);
-      setActiveTab('map');
-    } else if (item.type === 'district') {
-      setSelectedDistrict(item.name);
-      setActiveTab('map');
-    } else if (item.type === 'place') {
-      setSearchedLocation(item);
-      setActiveTab('map');
-    }
+    if (item.type === 'station') { setSelectedStation(item.station); setActiveTab('map'); }
+    else if (item.type === 'district') { setSelectedDistrict(item.name); setActiveTab('map'); }
+    else if (item.type === 'place') { setSearchedLocation(item); setActiveTab('map'); }
   };
 
-  // Filtered wells count based on search or district
   const filteredWellsCount = useMemo(() => {
     return wells.filter(w => {
       if (selectedDistrict !== 'ALL' && w.district !== selectedDistrict) return false;
@@ -96,110 +90,148 @@ export default function App() {
     }).length;
   }, [wells, selectedDistrict, searchQuery]);
 
-  // Selected district info for modal comparison
   const selectedDistrictInfo = useMemo(() => {
     if (!selectedStation) return null;
     return districts.find(d => d.name === selectedStation.district) || null;
   }, [selectedStation, districts]);
 
-  // Handler to view district from analytics on the map
   const handleViewDistrictOnMap = (districtName) => {
     setSelectedDistrict(districtName);
     setActiveTab('map');
   };
 
-  // ==========================================
-  // ROUTE 1: Landing Page (Exclusive White Theme)
-  // ==========================================
+  // ── After login success: route based on role ──────────────────────────────
+  const handleLoginSuccess = (loggedInUser) => {
+    setLoginModalOpen(false);
+    if (loggedInUser?.role === 'government_official') {
+      navigateTo('/government');
+    } else {
+      // Farmer: route to their profile (use phone-based id or default)
+      const farmerId = loggedInUser?.id || 'selvam-thanjavur';
+      navigateTo(`/users/${farmerId}`);
+    }
+  };
+
+  // ── Auth Guard: If navigating to protected route without auth ─────────────
+  const isProtectedRoute = currentPath.startsWith('/users/') || currentPath === '/government';
+  useEffect(() => {
+    // Wait until auth is loaded before deciding
+    if (isLoading) return;
+    if (isProtectedRoute && !isAuthenticated) {
+      setLoginModalOpen(true);
+    }
+  }, [isProtectedRoute, isAuthenticated, isLoading]);
+
+  // ── User pill for breadcrumb bar ──────────────────────────────────────────
+  const UserPill = () => {
+    if (!isAuthenticated || !user) return null;
+    const roleColor = role === 'farmer' ? '#10b981' : '#38bdf8';
+    const roleLabel = role === 'farmer' ? '🌾 Farmer' : '🏛️ Gov Official';
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '999px', padding: '0.3rem 0.75rem',
+          fontSize: '0.75rem', color: roleColor, fontWeight: '600',
+          display: 'flex', alignItems: 'center', gap: '0.35rem'
+        }}>
+          <User size={12} />
+          <span>{user.phone || user.id}</span>
+          <span style={{ opacity: 0.55 }}>·</span>
+          <span>{roleLabel}</span>
+        </div>
+        <button
+          onClick={() => { logout(); navigateTo('/'); }}
+          title="Logout"
+          style={{
+            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)',
+            borderRadius: '8px', color: '#f87171', cursor: 'pointer',
+            padding: '0.3rem 0.55rem', display: 'flex', alignItems: 'center',
+            fontSize: '0.72rem', gap: '0.3rem', fontWeight: '600'
+          }}
+        >
+          <LogOut size={12} /> Logout
+        </button>
+      </div>
+    );
+  };
+
+  // ==========================================================================
+  // ROUTE 1: Landing Page
+  // ==========================================================================
   if (currentPath === '/' || currentPath === '') {
     return (
       <div className="landing-page-root">
-        <LandingPage onNavigate={navigateTo} />
-      </div>
-    );
-  }
-
-  // ==========================================
-  // ROUTE 2: Farmer IoT Dashboard (/users/:userId)
-  // ==========================================
-  if (currentPath.startsWith('/users/')) {
-    const rawUserId = currentPath.replace('/users/', '').split('/')[0] || 'selvam-thanjavur';
-    return (
-      <div className="app-container">
-        {/* Global Breadcrumb & Role Switcher */}
-        <div className="glass-card" style={{ 
-          padding: '0.5rem 1rem', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          fontSize: '0.78rem', 
-          background: 'rgba(15, 23, 42, 0.9)',
-          borderRadius: '10px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <button 
-              onClick={() => navigateTo('/')} 
-              style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}
-            >
-              <Home size={14} /> Home
-            </button>
-            <span style={{ color: 'var(--text-muted)' }}>/</span>
-            <span style={{ color: '#34d399', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Sprout size={14} /> Farmer Portal (/users/{rawUserId})
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <button 
-              className="btn btn-water" 
-              style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              onClick={() => navigateTo('/government')}
-            >
-              <Building2 size={13} />
-              <span>Government Hub</span>
-            </button>
-            <button 
-              className="btn btn-secondary"
-              onClick={toggleTheme}
-              style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem' }}
-              title="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun size={14} color="#f59e0b" /> : <Moon size={14} color="#0ea5e9" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Farmer Dashboard Body */}
-        <FarmerDashboard 
-          userId={rawUserId} 
-          onNavigate={navigateTo} 
-          theme={theme} 
+        <LandingPage
+          onNavigate={navigateTo}
+          onLoginClick={() => setLoginModalOpen(true)}
+          isAuthenticated={isAuthenticated}
+          userRole={role}
+        />
+        <LoginModal
+          isOpen={loginModalOpen}
+          onClose={() => setLoginModalOpen(false)}
+          onSuccess={handleLoginSuccess}
         />
       </div>
     );
   }
 
-  // ==========================================
+  // ==========================================================================
+  // ROUTE 2: Farmer IoT Dashboard (/users/:userId)
+  // ==========================================================================
+  if (currentPath.startsWith('/users/')) {
+    const rawUserId = currentPath.replace('/users/', '').split('/')[0] || 'selvam-thanjavur';
+    return (
+      <div className="app-container">
+        <div className="glass-card" style={{
+          padding: '0.5rem 1rem',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontSize: '0.78rem',
+          background: 'rgba(15, 23, 42, 0.9)',
+          borderRadius: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <button onClick={() => navigateTo('/')} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}>
+              <Home size={14} /> Home
+            </button>
+            <span style={{ color: 'var(--text-muted)' }}>/</span>
+            <span style={{ color: '#34d399', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Sprout size={14} /> Farmer Portal
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <UserPill />
+            <button className="btn btn-water" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }} onClick={() => navigateTo('/government')}>
+              <Building2 size={13} /> Government Hub
+            </button>
+            <button className="btn btn-secondary" onClick={toggleTheme} style={{ padding: '0.3rem 0.55rem', fontSize: '0.75rem' }} title="Toggle Theme">
+              {theme === 'dark' ? <Sun size={14} color="#f59e0b" /> : <Moon size={14} color="#0ea5e9" />}
+            </button>
+          </div>
+        </div>
+
+        <FarmerDashboard userId={rawUserId} onNavigate={navigateTo} theme={theme} />
+
+        <LoginModal isOpen={loginModalOpen} onClose={() => { setLoginModalOpen(false); navigateTo('/'); }} onSuccess={handleLoginSuccess} />
+      </div>
+    );
+  }
+
+  // ==========================================================================
   // ROUTE 3: State Government Hub (/government)
-  // ==========================================
+  // ==========================================================================
   return (
     <div className="app-container">
-      
-      {/* Top Breadcrumb Ribbon */}
-      <div className="glass-card" style={{ 
-        padding: '0.5rem 1rem', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        fontSize: '0.78rem', 
+      <div className="glass-card" style={{
+        padding: '0.5rem 1rem',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        fontSize: '0.78rem',
         background: 'rgba(15, 23, 42, 0.9)',
         borderRadius: '10px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <button 
-            onClick={() => navigateTo('/')} 
-            style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}
-          >
+          <button onClick={() => navigateTo('/')} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: '700' }}>
             <Home size={14} /> Home
           </button>
           <span style={{ color: 'var(--text-muted)' }}>/</span>
@@ -207,110 +239,69 @@ export default function App() {
             <Building2 size={14} /> State Government Groundwater Command Hub
           </span>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <button 
-            className="btn btn-green" 
-            style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-            onClick={() => navigateTo('/users/selvam-thanjavur')}
-          >
-            <Sprout size={13} />
-            <span>Launch Farmer Portal (Demo)</span>
+          <UserPill />
+          <button className="btn btn-green" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }} onClick={() => navigateTo('/users/selvam-thanjavur')}>
+            <Sprout size={13} /> Farmer Portal (Demo)
           </button>
         </div>
       </div>
 
-      {/* Navigation Header */}
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        theme={theme}
-        toggleTheme={toggleTheme}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        totalWells={wells.length}
-        districtsCount={districts.length}
-        wells={wells}
-        districts={districts}
+        activeTab={activeTab} setActiveTab={setActiveTab}
+        theme={theme} toggleTheme={toggleTheme}
+        searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+        totalWells={wells.length} districtsCount={districts.length}
+        wells={wells} districts={districts}
         onSelectLocation={handleSelectLocation}
       />
 
-      {/* KPI Overview Metrics (Always visible at top) */}
       <KpiMetrics
         stateStats={stateStats}
         filteredCount={filteredWellsCount}
         totalWells={wells.length}
-        onSelectCategory={(cat) => {
-          setActiveTab('table');
-        }}
+        onSelectCategory={() => setActiveTab('table')}
       />
 
-      {/* Tabbed Content Sections */}
       <main style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        
-        {/* TAB 1: Geospatial Map View */}
         {activeTab === 'map' && (
           <GroundwaterMap
-            wells={wells}
-            districts={districts}
-            selectedDistrict={selectedDistrict}
-            setSelectedDistrict={setSelectedDistrict}
+            wells={wells} districts={districts}
+            selectedDistrict={selectedDistrict} setSelectedDistrict={setSelectedDistrict}
             onSelectStation={setSelectedStation}
             searchQuery={searchQuery}
-            searchedLocation={searchedLocation}
-            setSearchedLocation={setSearchedLocation}
+            searchedLocation={searchedLocation} setSearchedLocation={setSearchedLocation}
           />
         )}
-
-        {/* TAB 2: District-wise Hydrogeological Analytics */}
         {activeTab === 'analytics' && (
           <DistrictAnalytics
             districts={districts}
-            selectedDistrict={selectedDistrict}
-            setSelectedDistrict={setSelectedDistrict}
+            selectedDistrict={selectedDistrict} setSelectedDistrict={setSelectedDistrict}
             onViewDistrictOnMap={handleViewDistrictOnMap}
           />
         )}
-
-        {/* TAB 3: Monitoring Station Registry & Data Table */}
         {activeTab === 'table' && (
           <StationsTable
-            wells={wells}
-            districts={districts}
+            wells={wells} districts={districts}
             onSelectStation={setSelectedStation}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
+            searchQuery={searchQuery} setSearchQuery={setSearchQuery}
           />
         )}
-
-        {/* TAB 4: Seasonal Fluctuation & Rainfall Trends */}
-        {activeTab === 'rainfall' && (
-          <SeasonalTrendsChart
-            stateStats={stateStats}
-          />
-        )}
-
-        {/* TAB 5: Strategic Roadmap & AI/IoT Vision */}
-        {activeTab === 'roadmap' && (
-          <RoadmapVision />
-        )}
-
+        {activeTab === 'rainfall' && <SeasonalTrendsChart stateStats={stateStats} />}
+        {activeTab === 'roadmap' && <RoadmapVision />}
       </main>
 
-      {/* Station Deep-Dive Hydrograph Modal */}
       {selectedStation && (
         <StationDetailModal
-          station={selectedStation}
-          districtInfo={selectedDistrictInfo}
+          station={selectedStation} districtInfo={selectedDistrictInfo}
           onClose={() => setSelectedStation(null)}
         />
       )}
 
-      {/* Footer */}
       <footer className="glass-card" style={{ padding: '1.25rem 1.5rem', marginTop: '1rem', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
-            <strong>Tamil Nadu Smart Groundwater Monitoring System (MVP)</strong> · Source: Central Ground Water Board (CGWB) 2024-25 Technical Report SECR/GWYB/TN/2024
+            <strong>Tamil Nadu Smart Groundwater Monitoring System (MVP)</strong> · Source: CGWB 2024-25
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span>818 Ground Truth Stations</span>
@@ -322,6 +313,18 @@ export default function App() {
         </div>
       </footer>
 
+      <LoginModal isOpen={loginModalOpen} onClose={() => { setLoginModalOpen(false); navigateTo('/'); }} onSuccess={handleLoginSuccess} />
     </div>
+  );
+}
+
+// ==========================================================================
+// ROOT App — wraps everything in AuthProvider
+// ==========================================================================
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
   );
 }
