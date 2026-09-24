@@ -249,20 +249,40 @@ export const FARMER_USERS = {
 };
 
 /**
- * Helper to get a farmer by string id or numeric id
+ * Resolve farmer telemetry by ID or registered IoT device ID.
+ * Uses the actual signed-in farmer account when available, while keeping the
+ * existing sample dataset as a fallback for demo profiles.
  */
-export function getFarmerUser(id) {
-  if (!id) return FARMER_USERS['selvam-thanjavur'];
-  const cleanId = String(id).toLowerCase().trim();
-  
-  if (FARMER_USERS[cleanId]) {
-    return FARMER_USERS[cleanId];
+export function resolveFarmerProfile(id, userProfile = null) {
+  const fallback = FARMER_USERS['selvam-thanjavur'];
+  const cleanId = id ? String(id).toLowerCase().trim() : '';
+
+  if (userProfile?.iot_hub_id) {
+    const ioTMatch = Object.values(FARMER_USERS).find((u) => {
+      const candidate = String(u.iotHubId || '').trim();
+      return candidate.toLowerCase() === String(userProfile.iot_hub_id).trim().toLowerCase();
+    });
+    if (ioTMatch) {
+      return { ...ioTMatch, id: id || ioTMatch.id, name: userProfile.full_name || ioTMatch.name };
+    }
   }
 
-  // Lookup by numeric id (e.g. 101, 102, 103)
-  const found = Object.values(FARMER_USERS).find(u => u.numericId === cleanId);
-  if (found) return found;
+  if (cleanId) {
+    if (FARMER_USERS[cleanId]) {
+      return FARMER_USERS[cleanId];
+    }
 
-  // Default fallback to first farmer
-  return FARMER_USERS['selvam-thanjavur'];
+    const found = Object.values(FARMER_USERS).find(u => u.numericId === cleanId);
+    if (found) return found;
+  }
+
+  if (userProfile?.full_name) {
+    return { ...fallback, id: cleanId || fallback.id, name: userProfile.full_name };
+  }
+
+  return fallback;
+}
+
+export function getFarmerUser(id, userProfile = null) {
+  return resolveFarmerProfile(id, userProfile);
 }

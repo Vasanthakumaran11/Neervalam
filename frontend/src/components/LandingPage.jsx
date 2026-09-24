@@ -13,7 +13,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function LandingPage({ onNavigate, onLoginClick, isAuthenticated, userRole }) {
+export default function LandingPage({ onNavigate, onLoginClick, isAuthenticated, userRole, userId }) {
   return (
     <div style={{ 
       color: '#1e293b', 
@@ -132,7 +132,7 @@ export default function LandingPage({ onNavigate, onLoginClick, isAuthenticated,
             {isAuthenticated ? (
               // Already logged in — show Go to Dashboard
               <button
-                onClick={() => onNavigate && onNavigate(userRole === 'government_official' ? '/government' : '/users/selvam-thanjavur')}
+                onClick={() => onNavigate && onNavigate(userRole === 'government_official' ? '/government' : `/users/${userId || 'selvam-thanjavur'}`)}
                 style={{
                   background: 'linear-gradient(135deg, #196342 0%, #15803d 100%)',
                   color: '#ffffff', border: 'none', borderRadius: '999px',
@@ -369,7 +369,7 @@ export default function LandingPage({ onNavigate, onLoginClick, isAuthenticated,
 
               <div>
                 <button 
-                  onClick={() => onNavigate && onNavigate('/users/selvam-thanjavur')}
+                  onClick={() => onNavigate && onNavigate(`/users/${userId || 'selvam-thanjavur'}`)}
                   style={{
                     background: '#196342',
                     color: '#ffffff',
@@ -599,7 +599,7 @@ export default function LandingPage({ onNavigate, onLoginClick, isAuthenticated,
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
               <button 
-                onClick={() => onNavigate && onNavigate('/users/selvam-thanjavur')}
+                onClick={() => onNavigate && onNavigate(`/users/${userId || 'selvam-thanjavur'}`)}
                 style={{
                   background: '#196342',
                   color: '#ffffff',

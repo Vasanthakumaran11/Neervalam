@@ -1,24 +1,189 @@
 import React, { useState } from 'react';
-import { Phone, ShieldCheck, ArrowRight, Loader2, X, Sprout, Building2, ChevronLeft } from 'lucide-react';
-import { sendOTP, verifyOTP } from '../services/apiService';
+import {
+  Phone, ShieldCheck, ArrowRight, Loader2, X,
+  Sprout, Building2, ChevronLeft, User, MapPin,
+  LogIn, UserPlus,
+} from 'lucide-react';
+import { sendOTP, verifyOTP, checkUser } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
 
-const STEP = { ROLE: 'role', PHONE: 'phone', OTP: 'otp', SUCCESS: 'success' };
+// ─── Step Constants ──────────────────────────────────────────────────────────
+const STEP = {
+  MODE:    'mode',    // Login / Sign Up choice
+  ROLE:    'role',    // Pick role (farmer / govt)
+  SIGNUP:  'signup',  // Signup form (name, phone, district)
+  PHONE:   'phone',   // Login: enter phone
+  OTP:     'otp',     // Enter OTP
+  SUCCESS: 'success', // Done
+};
 
+const TAMIL_DISTRICTS = [
+  'Ariyalur','Chengalpattu','Chennai','Coimbatore','Cuddalore','Dharmapuri',
+  'Dindigul','Erode','Kallakurichi','Kancheepuram','Kanyakumari','Karur',
+  'Krishnagiri','Madurai','Nagapattinam','Namakkal','Nilgiris','Perambalur',
+  'Pudukkottai','Ramanathapuram','Ranipet','Salem','Sivaganga','Tenkasi',
+  'Thanjavur','Theni','Thoothukudi','Tiruchirappalli','Tirunelveli',
+  'Tirupathur','Tiruppur','Tiruvallur','Tiruvannamalai','Tiruvarur',
+  'Vellore','Viluppuram','Virudhunagar',
+];
+
+// ─── Shared Styles ────────────────────────────────────────────────────────────
+const css = {
+  overlay: {
+    position: 'fixed', inset: 0, zIndex: 9999,
+    background: 'rgba(0,0,0,0.6)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '1rem',
+    animation: 'nvFadeIn 0.2s ease',
+  },
+  card: {
+    background: '#ffffff',
+    borderRadius: '22px',
+    width: '100%', maxWidth: '430px',
+    boxShadow: '0 32px 100px rgba(0,0,0,0.22)',
+    overflow: 'hidden',
+    animation: 'nvSlideUp 0.28s cubic-bezier(.22,.68,0,1.2)',
+  },
+  header: (color = 'green') => ({
+    background: color === 'blue'
+      ? 'linear-gradient(135deg, #0c2e4a 0%, #0369a1 60%, #0284c7 100%)'
+      : 'linear-gradient(135deg, #0f3b2e 0%, #196342 60%, #15803d 100%)',
+    padding: '1.75rem 1.75rem 1.5rem',
+    color: '#fff',
+    position: 'relative',
+  }),
+  body: {
+    padding: '1.5rem 1.75rem 1.75rem',
+  },
+  input: {
+    width: '100%', boxSizing: 'border-box',
+    border: '1.5px solid #e2e8f0', borderRadius: '12px',
+    padding: '0.75rem 1rem', fontSize: '0.95rem',
+    color: '#0f172a', outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    fontFamily: 'inherit', background: '#fff',
+  },
+  label: {
+    display: 'block', fontWeight: '600',
+    fontSize: '0.8rem', color: '#475569', marginBottom: '0.4rem',
+  },
+  btnPrimary: (color = 'green') => ({
+    width: '100%',
+    background: color === 'blue'
+      ? 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)'
+      : 'linear-gradient(135deg, #196342 0%, #15803d 100%)',
+    color: '#fff', border: 'none', borderRadius: '12px',
+    padding: '0.85rem 1rem', fontSize: '1rem', fontWeight: '700',
+    cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+    transition: 'all 0.2s ease', marginTop: '0.25rem',
+    boxShadow: color === 'blue'
+      ? '0 4px 14px rgba(3,105,161,0.3)'
+      : '0 4px 14px rgba(25,99,66,0.28)',
+  }),
+  iconBtn: {
+    background: 'rgba(255,255,255,0.15)', border: 'none',
+    borderRadius: '8px', color: '#fff', cursor: 'pointer',
+    padding: '0.35rem 0.5rem', display: 'flex',
+  },
+  error: {
+    background: '#fef2f2', border: '1px solid #fecaca',
+    borderRadius: '10px', padding: '0.65rem 0.9rem',
+    fontSize: '0.82rem', color: '#dc2626',
+  },
+  devHint: {
+    background: '#fefce8', border: '1px solid #fde68a',
+    borderRadius: '10px', padding: '0.65rem 0.9rem',
+    fontSize: '0.78rem', color: '#92400e',
+    display: 'flex', gap: '0.4rem', marginBottom: '1rem',
+  },
+};
+
+const globalAnim = `
+  @keyframes nvFadeIn  { from{opacity:0}  to{opacity:1} }
+  @keyframes nvSlideUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes nvSpin    { to{transform:rotate(360deg)} }
+`;
+
+// ─── Reusable sub-components ──────────────────────────────────────────────────
+function CloseBtn({ onClick }) {
+  return (
+    <button onClick={onClick} style={{ ...css.iconBtn, position: 'absolute', top: '1rem', right: '1rem' }}>
+      <X size={18} />
+    </button>
+  );
+}
+
+function BackBtn({ onClick }) {
+  return (
+    <button onClick={onClick} style={{ ...css.iconBtn, position: 'absolute', top: '1rem', left: '1rem' }}>
+      <ChevronLeft size={18} />
+    </button>
+  );
+}
+
+function ModalHeader({ title, subtitle, icon, color, onBack, onClose }) {
+  return (
+    <div style={css.header(color)}>
+      {onBack  && <BackBtn onClick={onBack} />}
+      {onClose && <CloseBtn onClick={onClose} />}
+      <div style={{ paddingTop: onBack || onClose ? '0.25rem' : 0 }}>
+        {icon}
+        <div style={{ fontSize: '1.1rem', fontWeight: '800', marginTop: icon ? '0.4rem' : 0 }}>{title}</div>
+        {subtitle && <div style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '0.2rem' }}>{subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+
+function RoleCard({ icon, title, desc, accentColor, bgColor, onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseOver={() => setHov(true)}
+      onMouseOut={() => setHov(false)}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        border: `2px solid ${hov ? accentColor : '#e2e8f0'}`,
+        borderRadius: '14px', padding: '1rem 1.25rem', cursor: 'pointer',
+        background: hov ? bgColor : '#fff',
+        textAlign: 'left', transition: 'all 0.2s ease', width: '100%',
+      }}
+    >
+      <div style={{ width: 46, height: 46, borderRadius: '12px', background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {icon}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.95rem' }}>{title}</div>
+        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.15rem' }}>{desc}</div>
+      </div>
+      <ArrowRight size={17} color="#94a3b8" />
+    </button>
+  );
+}
+
+// ─── Main Modal ───────────────────────────────────────────────────────────────
 export default function LoginModal({ isOpen, onClose, onSuccess }) {
   const { login } = useAuth();
 
-  const [step, setStep]           = useState(STEP.ROLE);
-  const [role, setRole]           = useState('');
-  const [phone, setPhone]         = useState('');
-  const [otp, setOtp]             = useState('');
+  const [step,      setStep]      = useState(STEP.MODE);
+  const [authMode,  setAuthMode]  = useState('login');   // 'login' | 'signup'
+  const [role,      setRole]      = useState('');
+  const [phone,     setPhone]     = useState('');
+  const [fullName,  setFullName]  = useState('');
+  const [district,  setDistrict]  = useState('Thanjavur');
+  const [jobTitle,  setJobTitle]  = useState('');
+  const [iotHubId,  setIotHubId]  = useState('');
+  const [otp,       setOtp]       = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError]         = useState('');
+  const [error,     setError]     = useState('');
   const [resendTimer, setResendTimer] = useState(0);
+  const [existingUserName, setExistingUserName] = useState('');
 
   if (!isOpen) return null;
 
-  // ── Format phone to E.164 ──────────────────────────────────────────────────
   function normalizePhone(raw) {
     const digits = raw.replace(/\D/g, '');
     if (digits.startsWith('91') && digits.length === 12) return `+${digits}`;
@@ -26,30 +191,42 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
     return `+${digits}`;
   }
 
-  // ── Start resend countdown ─────────────────────────────────────────────────
   function startResendTimer() {
     setResendTimer(30);
     const iv = setInterval(() => {
-      setResendTimer(prev => {
-        if (prev <= 1) { clearInterval(iv); return 0; }
-        return prev - 1;
-      });
+      setResendTimer(prev => { if (prev <= 1) { clearInterval(iv); return 0; } return prev - 1; });
     }, 1000);
   }
 
-  // ── Step 2: Send OTP ───────────────────────────────────────────────────────
-  async function handleSendOTP(e) {
+  function reset() {
+    setStep(STEP.MODE); setRole(''); setPhone(''); setOtp('');
+    setFullName(''); setDistrict('Thanjavur'); setJobTitle(''); setIotHubId(''); setError('');
+    setExistingUserName('');
+  }
+
+  function focusColor() { return role === 'government_official' ? '#0284c7' : '#059669'; }
+  function headerColor() { return role === 'government_official' ? 'blue' : 'green'; }
+
+  // ── LOGIN: Phone Submit → check if registered → send OTP ──────────────────
+  async function handleLoginPhone(e) {
     e.preventDefault();
     setError('');
     const normalized = normalizePhone(phone);
-    if (normalized.length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
-    }
+    if (normalized.length < 12) { setError('Enter a valid 10-digit mobile number.'); return; }
     setIsLoading(true);
     try {
-      await sendOTP(normalized, role);
+      // Check if user exists
+      const check = await checkUser(normalized);
+      if (!check.exists) {
+        setError('This number is not registered. Please sign up first.');
+        setIsLoading(false);
+        return;
+      }
+      setExistingUserName(check.full_name || '');
+      // Send OTP
+      await sendOTP(normalized, check.role || role || 'farmer', 'login');
       setPhone(normalized);
+      if (check.role) setRole(check.role);
       setStep(STEP.OTP);
       startResendTimer();
     } catch (err) {
@@ -59,23 +236,58 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
     }
   }
 
-  // ── Step 3: Verify OTP ────────────────────────────────────────────────────
-  async function handleVerifyOTP(e) {
+  // ── SIGNUP: Form submit → send OTP ────────────────────────────────────────
+  async function handleSignupSubmit(e) {
     e.preventDefault();
     setError('');
-    if (otp.length !== 6) {
-      setError('Please enter the 6-digit OTP.');
+    if (!fullName.trim()) { setError('Please enter your full name.'); return; }
+    const normalized = normalizePhone(phone);
+    if (normalized.length < 12) { setError('Enter a valid 10-digit mobile number.'); return; }
+    if (!district) { setError('Please select your district.'); return; }
+    if (role === 'farmer' && !iotHubId.trim()) {
+      setError('Please enter the installed IoT device ID for the farmer well.');
+      return;
+    }
+    if (role === 'government_official' && !jobTitle.trim()) {
+      setError('Please select the government job title.');
       return;
     }
     setIsLoading(true);
     try {
-      const authData = await verifyOTP(phone, otp, role);
+      const signupData = {
+        full_name: fullName.trim(),
+        district,
+        ...(role === 'farmer' ? { iot_hub_id: iotHubId.trim() } : { job_title: jobTitle.trim() }),
+      };
+      await sendOTP(normalized, role, 'signup', signupData);
+      setPhone(normalized);
+      setStep(STEP.OTP);
+      startResendTimer();
+    } catch (err) {
+      setError(err.message || 'Signup failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // ── OTP Verify ────────────────────────────────────────────────────────────
+  async function handleVerifyOTP(e) {
+    e.preventDefault();
+    setError('');
+    if (otp.length !== 6) { setError('Please enter the 6-digit OTP.'); return; }
+    setIsLoading(true);
+    try {
+      const signupData = authMode === 'signup'
+        ? {
+            full_name: fullName,
+            district,
+            ...(role === 'farmer' ? { iot_hub_id: iotHubId } : { job_title: jobTitle }),
+          }
+        : {};
+      const authData = await verifyOTP(phone, otp, role || 'farmer', authMode, signupData);
       login(authData);
       setStep(STEP.SUCCESS);
-      setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess(authData.user);
-      }, 1200);
+      setTimeout(() => { onClose(); if (onSuccess) onSuccess(authData.user); }, 1200);
     } catch (err) {
       setError(err.message || 'Invalid OTP. Please try again.');
     } finally {
@@ -83,326 +295,390 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
     }
   }
 
-  // ── Resend OTP ────────────────────────────────────────────────────────────
+  // ── Resend ────────────────────────────────────────────────────────────────
   async function handleResend() {
-    if (resendTimer > 0) return;
+    if (resendTimer > 0 || isLoading) return;
     setError('');
     setIsLoading(true);
     try {
-      await sendOTP(phone, role);
+      const signupData = authMode === 'signup'
+        ? {
+            full_name: fullName,
+            district,
+            ...(role === 'farmer' ? { iot_hub_id: iotHubId } : { job_title: jobTitle }),
+          }
+        : {};
+      await sendOTP(phone, role || 'farmer', authMode, signupData);
       startResendTimer();
-    } catch (err) {
-      setError(err.message || 'Could not resend OTP.');
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setIsLoading(false); }
   }
 
-  // ── Reset to start ────────────────────────────────────────────────────────
-  function resetModal() {
-    setStep(STEP.ROLE); setRole(''); setPhone(''); setOtp(''); setError('');
-  }
+  const LoadingSpinner = () => (
+    <Loader2 size={18} style={{ animation: 'nvSpin 1s linear infinite' }} />
+  );
 
-  // ─── Styles ───────────────────────────────────────────────────────────────
-  const overlayStyle = {
-    position: 'fixed', inset: 0, zIndex: 9999,
-    background: 'rgba(0,0,0,0.55)',
-    backdropFilter: 'blur(6px)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '1rem',
-    animation: 'fadeIn 0.2s ease',
-  };
-
-  const cardStyle = {
-    background: '#ffffff',
-    borderRadius: '20px',
-    width: '100%', maxWidth: '420px',
-    boxShadow: '0 24px 80px rgba(0,0,0,0.18)',
-    overflow: 'hidden',
-    animation: 'slideUp 0.3s cubic-bezier(.22,.68,0,1.2)',
-  };
-
-  const headerStyle = {
-    background: 'linear-gradient(135deg, #0f3b2e 0%, #196342 60%, #15803d 100%)',
-    padding: '1.75rem 1.75rem 1.5rem',
-    color: '#fff',
-    position: 'relative',
-  };
-
-  const inputStyle = {
-    width: '100%', boxSizing: 'border-box',
-    border: '1.5px solid #e2e8f0',
-    borderRadius: '12px',
-    padding: '0.75rem 1rem',
-    fontSize: '1rem',
-    color: '#0f172a',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    fontFamily: 'inherit',
-  };
-
-  const btnPrimaryStyle = {
-    width: '100%',
-    background: 'linear-gradient(135deg, #196342 0%, #15803d 100%)',
-    color: '#fff',
-    border: 'none', borderRadius: '12px',
-    padding: '0.85rem 1rem',
-    fontSize: '1rem', fontWeight: '700',
-    cursor: isLoading ? 'not-allowed' : 'pointer',
-    opacity: isLoading ? 0.75 : 1,
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-    transition: 'all 0.2s ease',
-    marginTop: '0.25rem',
-  };
-
-  // ─── ROLE SELECTION STEP ──────────────────────────────────────────────────
-  if (step === STEP.ROLE) {
+  // ==========================================================================
+  // STEP: MODE — Login vs Sign Up choice
+  // ==========================================================================
+  if (step === STEP.MODE) {
     return (
-      <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
-        <div style={cardStyle}>
-          <div style={headerStyle}>
-            <button onClick={onClose} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '0.35rem 0.5rem', display: 'flex' }}>
-              <X size={18} />
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '10px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-              </div>
-              <span style={{ fontWeight: '800', fontSize: '1.2rem', letterSpacing: '-0.01em' }}>Neervalam</span>
+      <div style={css.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div style={css.card}>
+          <ModalHeader
+            title="Welcome to Neervalam"
+            subtitle="Water Today, Harvest Tomorrow."
+            icon={<div style={{ width: 38, height: 38, borderRadius: '10px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>}
+            onClose={onClose}
+          />
+          <div style={css.body}>
+            <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem', background: '#f1f5f9', borderRadius: '12px', padding: '0.3rem' }}>
+              {[['login', 'Login', LogIn], ['signup', 'Sign Up', UserPlus]].map(([mode, label, Icon]) => (
+                <button
+                  key={mode}
+                  onClick={() => setAuthMode(mode)}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
+                    padding: '0.6rem 0', borderRadius: '9px', border: 'none', cursor: 'pointer',
+                    fontWeight: '700', fontSize: '0.88rem',
+                    background: authMode === mode ? '#fff' : 'transparent',
+                    color: authMode === mode ? '#0f172a' : '#64748b',
+                    boxShadow: authMode === mode ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <Icon size={15} /> {label}
+                </button>
+              ))}
             </div>
-            <div style={{ fontSize: '1rem', fontWeight: '700', marginTop: '0.25rem' }}>Welcome back 👋</div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '0.25rem' }}>Who are you logging in as?</div>
-          </div>
 
-          <div style={{ padding: '1.5rem 1.75rem 1.75rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {/* Farmer Option */}
-              <button
-                onClick={() => { setRole('farmer'); setStep(STEP.PHONE); setError(''); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  border: '2px solid #e2e8f0', borderRadius: '14px',
-                  padding: '1rem 1.25rem', cursor: 'pointer', background: '#fff',
-                  textAlign: 'left', transition: 'all 0.2s ease',
-                }}
-                onMouseOver={e => { e.currentTarget.style.borderColor = '#10b981'; e.currentTarget.style.background = '#f0fdf4'; }}
-                onMouseOut={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; }}
-              >
-                <div style={{ width: 46, height: 46, borderRadius: '12px', background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Sprout size={22} color="#059669" />
+            {authMode === 'login' ? (
+              <>
+                <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+                  Enter your registered mobile number — we'll send a one-time password to verify it's you.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <RoleCard
+                    icon={<Sprout size={22} color="#059669" />}
+                    title="Login as Farmer" desc="IoT dashboard, pump control & irrigation advisory"
+                    accentColor="#10b981" bgColor="#d1fae5"
+                    onClick={() => { setRole('farmer'); setAuthMode('login'); setStep(STEP.PHONE); setError(''); }}
+                  />
+                  <RoleCard
+                    icon={<Building2 size={22} color="#0284c7" />}
+                    title="Login as Government Official" desc="State GIS map, district analytics & policy data"
+                    accentColor="#0ea5e9" bgColor="#dbeafe"
+                    onClick={() => { setRole('government_official'); setAuthMode('login'); setStep(STEP.PHONE); setError(''); }}
+                  />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.95rem' }}>Farmer</div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.15rem' }}>IoT dashboard, pump control, irrigation advisory</div>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+                  Create your Neervalam account. Choose your role to get started.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <RoleCard
+                    icon={<Sprout size={22} color="#059669" />}
+                    title="Sign Up as Farmer" desc="Register with your farm & IoT sensor details"
+                    accentColor="#10b981" bgColor="#d1fae5"
+                    onClick={() => { setRole('farmer'); setAuthMode('signup'); setStep(STEP.SIGNUP); setError(''); }}
+                  />
+                  <RoleCard
+                    icon={<Building2 size={22} color="#0284c7" />}
+                    title="Sign Up as Government Official" desc="Register with your official designation & district"
+                    accentColor="#0ea5e9" bgColor="#dbeafe"
+                    onClick={() => { setRole('government_official'); setAuthMode('signup'); setStep(STEP.SIGNUP); setError(''); }}
+                  />
                 </div>
-                <ArrowRight size={18} color="#94a3b8" />
-              </button>
-
-              {/* Government Option */}
-              <button
-                onClick={() => { setRole('government_official'); setStep(STEP.PHONE); setError(''); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  border: '2px solid #e2e8f0', borderRadius: '14px',
-                  padding: '1rem 1.25rem', cursor: 'pointer', background: '#fff',
-                  textAlign: 'left', transition: 'all 0.2s ease',
-                }}
-                onMouseOver={e => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.background = '#f0f9ff'; }}
-                onMouseOut={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; }}
-              >
-                <div style={{ width: 46, height: 46, borderRadius: '12px', background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Building2 size={22} color="#0284c7" />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.95rem' }}>Government Official</div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.15rem' }}>State-level GIS map, district analytics, policy data</div>
-                </div>
-                <ArrowRight size={18} color="#94a3b8" />
-              </button>
-            </div>
+              </>
+            )}
 
             <p style={{ textAlign: 'center', fontSize: '0.72rem', color: '#94a3b8', marginTop: '1.25rem' }}>
-              Secure OTP login · No password needed · Data encrypted
+              🔒 Secure OTP login · No password needed · Data encrypted
             </p>
           </div>
         </div>
-        <style>{`
-          @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-          @keyframes slideUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-        `}</style>
+        <style>{globalAnim}</style>
       </div>
     );
   }
 
-  // ─── PHONE NUMBER STEP ────────────────────────────────────────────────────
-  if (step === STEP.PHONE) {
+  // ==========================================================================
+  // STEP: SIGNUP — Full registration form
+  // ==========================================================================
+  if (step === STEP.SIGNUP) {
     const roleLabel = role === 'farmer' ? 'Farmer' : 'Government Official';
-    const roleColor = role === 'farmer' ? '#059669' : '#0284c7';
-    const roleBg = role === 'farmer' ? '#d1fae5' : '#dbeafe';
-    const RoleIcon = role === 'farmer' ? Sprout : Building2;
+    const RoleIcon  = role === 'farmer' ? Sprout : Building2;
+    const hColor    = headerColor();
+    const fColor    = focusColor();
 
     return (
-      <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
-        <div style={cardStyle}>
-          <div style={headerStyle}>
-            <button onClick={resetModal} style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '0.35rem 0.5rem', display: 'flex' }}>
-              <ChevronLeft size={18} />
-            </button>
-            <button onClick={onClose} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '0.35rem 0.5rem', display: 'flex' }}>
-              <X size={18} />
-            </button>
-            <div style={{ paddingTop: '0.25rem' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.3rem 0.85rem', marginBottom: '0.6rem' }}>
-                <RoleIcon size={14} />
-                <span style={{ fontSize: '0.78rem', fontWeight: '600' }}>{roleLabel}</span>
-              </div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '800' }}>Enter your mobile number</div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '0.25rem' }}>We'll send a one-time password via SMS</div>
-            </div>
-          </div>
+      <div style={css.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div style={{ ...css.card, maxWidth: '460px' }}>
+          <ModalHeader
+            title={`Create ${roleLabel} Account`}
+            subtitle="Fill in your details — OTP will be sent to verify your mobile"
+            icon={<div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.3rem 0.85rem', marginBottom: '0.5rem' }}><RoleIcon size={14} /><span style={{ fontSize: '0.78rem', fontWeight: '600' }}>{roleLabel}</span></div>}
+            color={hColor}
+            onBack={() => { setStep(STEP.MODE); setError(''); }}
+            onClose={onClose}
+          />
 
-          <div style={{ padding: '1.5rem 1.75rem 1.75rem' }}>
-            <form onSubmit={handleSendOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={css.body}>
+            <form onSubmit={handleSignupSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Full Name */}
               <div>
-                <label style={{ display: 'block', fontWeight: '600', fontSize: '0.82rem', color: '#475569', marginBottom: '0.4rem' }}>
-                  Mobile Number
-                </label>
+                <label style={css.label}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span style={{
-                    position: 'absolute', left: '1rem',
-                    fontWeight: '700', fontSize: '0.95rem', color: '#334155',
-                    pointerEvents: 'none', userSelect: 'none'
-                  }}>+91</span>
                   <input
-                    type="tel"
-                    inputMode="numeric"
-                    maxLength={10}
-                    placeholder="98765 43210"
-                    value={phone.replace('+91', '')}
-                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                    style={{ ...inputStyle, paddingLeft: '3.25rem', letterSpacing: '0.1em' }}
-                    onFocus={e => e.target.style.borderColor = roleColor}
-                    onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-                    autoFocus
-                    required
+                    type="text" placeholder="e.g. Selvam Arumugam"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    style={{ ...css.input, paddingRight: '2.5rem' }}
+                    onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    autoFocus required
                   />
-                  <Phone size={17} color="#94a3b8" style={{ position: 'absolute', right: '1rem', pointerEvents: 'none' }} />
+                  <User size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
                 </div>
               </div>
 
-              {error && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '0.65rem 0.9rem', fontSize: '0.82rem', color: '#dc2626', display: 'flex', gap: '0.4rem', alignItems: 'flex-start' }}>
-                  ⚠️ {error}
+              {/* Mobile Number */}
+              <div>
+                <label style={css.label}>Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <span style={{ position: 'absolute', left: '1rem', fontWeight: '700', fontSize: '0.95rem', color: '#334155', pointerEvents: 'none', userSelect: 'none' }}>+91</span>
+                  <input
+                    type="tel" inputMode="numeric" maxLength={10}
+                    placeholder="98765 43210"
+                    value={phone.replace(/^\+91/, '')}
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                    style={{ ...css.input, paddingLeft: '3.25rem', letterSpacing: '0.06em' }}
+                    onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    required
+                  />
+                  <Phone size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
+                </div>
+              </div>
+
+              {/* District */}
+              <div>
+                <label style={css.label}>District <span style={{ color: '#ef4444' }}>*</span></label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <select
+                    value={district}
+                    onChange={e => setDistrict(e.target.value)}
+                    style={{ ...css.input, paddingRight: '2.5rem', appearance: 'none', cursor: 'pointer', color: district ? '#0f172a' : '#94a3b8' }}
+                    onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    required
+                  >
+                    <option value="">Select your district</option>
+                    {TAMIL_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                  <MapPin size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
+                </div>
+              </div>
+
+              {role === 'farmer' ? (
+                <div>
+                  <label style={css.label}>Installed IoT Device ID <span style={{ color: '#ef4444' }}>*</span></label>
+                  <input
+                    type="text"
+                    value={iotHubId}
+                    onChange={e => setIotHubId(e.target.value)}
+                    placeholder="e.g. IOT-TNJ-DELTA-4081"
+                    style={{ ...css.input }}
+                    onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    required
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label style={css.label}>Government Job Title <span style={{ color: '#ef4444' }}>*</span></label>
+                  <select
+                    value={jobTitle}
+                    onChange={e => setJobTitle(e.target.value)}
+                    style={{ ...css.input, cursor: 'pointer' }}
+                    onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    required
+                  >
+                    <option value="">Select your role</option>
+                    {['Chief Engineer','Deputy Chief Engineer','Assistant Engineer','Research Scientist','Public Information Officer'].map(option => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 
-              <button type="submit" style={{ ...btnPrimaryStyle, background: role === 'government_official' ? 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)' : btnPrimaryStyle.background }}>
-                {isLoading ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Sending OTP...</> : <>Send OTP <ArrowRight size={17} /></>}
+              {error && <div style={css.error}>⚠️ {error}</div>}
+
+              <button type="submit" disabled={isLoading} style={{ ...css.btnPrimary(hColor), opacity: isLoading ? 0.75 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}>
+                {isLoading ? <><LoadingSpinner /> Sending OTP...</> : <>Send OTP to Verify <ArrowRight size={17} /></>}
               </button>
             </form>
+
+            <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', marginTop: '1rem' }}>
+              Already registered?{' '}
+              <button type="button" onClick={() => { setAuthMode('login'); setStep(STEP.MODE); setError(''); }}
+                style={{ background: 'none', border: 'none', color: fColor, fontWeight: '700', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}>
+                Login here
+              </button>
+            </p>
           </div>
         </div>
-        <style>{`
-          @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-          @keyframes slideUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-          @keyframes spin { to { transform: rotate(360deg) } }
-        `}</style>
+        <style>{globalAnim}</style>
       </div>
     );
   }
 
-  // ─── OTP ENTRY STEP ───────────────────────────────────────────────────────
-  if (step === STEP.OTP) {
-    const roleColor = role === 'farmer' ? '#059669' : '#0284c7';
+  // ==========================================================================
+  // STEP: PHONE — Login phone entry
+  // ==========================================================================
+  if (step === STEP.PHONE) {
+    const roleLabel = role === 'farmer' ? 'Farmer' : 'Government Official';
+    const RoleIcon  = role === 'farmer' ? Sprout : Building2;
+    const hColor    = headerColor();
+    const fColor    = focusColor();
 
     return (
-      <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
-        <div style={cardStyle}>
-          <div style={headerStyle}>
-            <button onClick={() => setStep(STEP.PHONE)} style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '0.35rem 0.5rem', display: 'flex' }}>
-              <ChevronLeft size={18} />
-            </button>
-            <button onClick={onClose} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: '8px', color: '#fff', cursor: 'pointer', padding: '0.35rem 0.5rem', display: 'flex' }}>
-              <X size={18} />
-            </button>
-            <div style={{ paddingTop: '0.25rem' }}>
-              <ShieldCheck size={30} style={{ marginBottom: '0.4rem', opacity: 0.9 }} />
-              <div style={{ fontSize: '1.1rem', fontWeight: '800' }}>Verify OTP</div>
-              <div style={{ fontSize: '0.8rem', opacity: 0.75, marginTop: '0.25rem' }}>
-                Sent to <strong>{phone}</strong>
-              </div>
-            </div>
-          </div>
+      <div style={css.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div style={css.card}>
+          <ModalHeader
+            title="Enter Your Mobile Number"
+            subtitle="We'll send a one-time password to verify your identity"
+            icon={<div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.3rem 0.85rem', marginBottom: '0.5rem' }}><RoleIcon size={14} /><span style={{ fontSize: '0.78rem', fontWeight: '600' }}>{roleLabel}</span></div>}
+            color={hColor}
+            onBack={() => { setStep(STEP.MODE); setError(''); }}
+            onClose={onClose}
+          />
 
-          <div style={{ padding: '1.5rem 1.75rem 1.75rem' }}>
-            {/* Dev mode hint */}
-            <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: '10px', padding: '0.65rem 0.9rem', fontSize: '0.78rem', color: '#92400e', marginBottom: '1rem', display: 'flex', gap: '0.4rem' }}>
-              🧪 <span><strong>Dev mode:</strong> OTP is always <code style={{ background: '#fef3c7', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: '700' }}>123456</code></span>
+          <div style={css.body}>
+            <form onSubmit={handleLoginPhone} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={css.label}>Registered Mobile Number</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <span style={{ position: 'absolute', left: '1rem', fontWeight: '700', fontSize: '0.95rem', color: '#334155', pointerEvents: 'none', userSelect: 'none' }}>+91</span>
+                  <input
+                    type="tel" inputMode="numeric" maxLength={10}
+                    placeholder="98765 43210"
+                    value={phone.replace(/^\+91/, '')}
+                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
+                    style={{ ...css.input, paddingLeft: '3.25rem', letterSpacing: '0.1em', fontSize: '1.05rem' }}
+                    onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                    autoFocus required
+                  />
+                  <Phone size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
+                </div>
+              </div>
+
+              {error && <div style={css.error}>⚠️ {error}</div>}
+
+              <button type="submit" disabled={isLoading} style={{ ...css.btnPrimary(hColor), opacity: isLoading ? 0.75 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}>
+                {isLoading ? <><LoadingSpinner /> Checking...</> : <>Send OTP <ArrowRight size={17} /></>}
+              </button>
+            </form>
+
+            <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#64748b', marginTop: '1rem' }}>
+              New to Neervalam?{' '}
+              <button type="button" onClick={() => { setAuthMode('signup'); setStep(STEP.MODE); setError(''); }}
+                style={{ background: 'none', border: 'none', color: fColor, fontWeight: '700', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}>
+                Sign Up
+              </button>
+            </p>
+          </div>
+        </div>
+        <style>{globalAnim}</style>
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // STEP: OTP — Enter 6-digit OTP
+  // ==========================================================================
+  if (step === STEP.OTP) {
+    const hColor = headerColor();
+    const fColor = focusColor();
+    const maskedPhone = phone.slice(0, 3) + '·····' + phone.slice(-4);
+
+    return (
+      <div style={css.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
+        <div style={css.card}>
+          <ModalHeader
+            title="Verify OTP"
+            subtitle={<>OTP sent to <strong>{maskedPhone}</strong>{existingUserName ? ` · Welcome back, ${existingUserName.split(' ')[0]}!` : ''}</>}
+            icon={<ShieldCheck size={30} style={{ marginBottom: '0.4rem', opacity: 0.9 }} />}
+            color={hColor}
+            onBack={() => { setStep(authMode === 'signup' ? STEP.SIGNUP : STEP.PHONE); setError(''); setOtp(''); }}
+            onClose={onClose}
+          />
+
+          <div style={css.body}>
+            <div style={css.devHint}>
+              🧪 <span><strong>Dev mode:</strong> OTP is always <code style={{ background: '#fef3c7', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: '700', letterSpacing: '0.1em' }}>123456</code></span>
             </div>
 
             <form onSubmit={handleVerifyOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ display: 'block', fontWeight: '600', fontSize: '0.82rem', color: '#475569', marginBottom: '0.4rem' }}>
-                  6-Digit OTP
-                </label>
+                <label style={{ ...css.label, textAlign: 'center', marginBottom: '0.6rem' }}>Enter 6-Digit OTP</label>
                 <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="1 2 3 4 5 6"
+                  type="text" inputMode="numeric" maxLength={6}
+                  placeholder="· · · · · ·"
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                  style={{ ...inputStyle, letterSpacing: '0.45em', fontSize: '1.35rem', textAlign: 'center', fontWeight: '700', color: '#0f172a' }}
-                  onFocus={e => e.target.style.borderColor = roleColor}
-                  onBlur={e => e.target.style.borderColor = '#e2e8f0'}
-                  autoFocus
-                  required
+                  style={{ ...css.input, letterSpacing: '0.6em', fontSize: '1.6rem', textAlign: 'center', fontWeight: '800', paddingLeft: '1.5rem' }}
+                  onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
+                  onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                  autoFocus required
                 />
               </div>
 
-              {error && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '0.65rem 0.9rem', fontSize: '0.82rem', color: '#dc2626' }}>
-                  ⚠️ {error}
-                </div>
-              )}
+              {error && <div style={css.error}>⚠️ {error}</div>}
 
-              <button type="submit" style={{ ...btnPrimaryStyle, background: role === 'government_official' ? 'linear-gradient(135deg, #0369a1 0%, #0284c7 100%)' : btnPrimaryStyle.background }}>
-                {isLoading ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Verifying...</> : <>Verify & Login <ShieldCheck size={17} /></>}
+              <button type="submit" disabled={isLoading || otp.length !== 6}
+                style={{ ...css.btnPrimary(hColor), opacity: (isLoading || otp.length !== 6) ? 0.65 : 1, cursor: (isLoading || otp.length !== 6) ? 'not-allowed' : 'pointer' }}>
+                {isLoading
+                  ? <><LoadingSpinner /> Verifying...</>
+                  : <>{authMode === 'signup' ? 'Create Account' : 'Login'} <ShieldCheck size={17} /></>}
               </button>
 
               <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#64748b' }}>
                 Didn't receive it?{' '}
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={resendTimer > 0 || isLoading}
-                  style={{ background: 'none', border: 'none', color: resendTimer > 0 ? '#94a3b8' : roleColor, fontWeight: '700', cursor: resendTimer > 0 ? 'default' : 'pointer', fontSize: '0.8rem', padding: 0 }}
-                >
+                <button type="button" onClick={handleResend} disabled={resendTimer > 0 || isLoading}
+                  style={{ background: 'none', border: 'none', color: resendTimer > 0 ? '#94a3b8' : fColor, fontWeight: '700', cursor: resendTimer > 0 ? 'default' : 'pointer', fontSize: '0.8rem', padding: 0 }}>
                   {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
                 </button>
               </div>
             </form>
           </div>
         </div>
-        <style>{`
-          @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-          @keyframes slideUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
-          @keyframes spin { to { transform: rotate(360deg) } }
-        `}</style>
+        <style>{globalAnim}</style>
       </div>
     );
   }
 
-  // ─── SUCCESS STEP ─────────────────────────────────────────────────────────
+  // ==========================================================================
+  // STEP: SUCCESS
+  // ==========================================================================
   return (
-    <div style={overlayStyle}>
-      <div style={{ ...cardStyle, textAlign: 'center', padding: '2.5rem 1.75rem' }}>
-        <div style={{ width: 68, height: 68, borderRadius: '50%', background: 'linear-gradient(135deg, #d1fae5, #6ee7b7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-          <ShieldCheck size={34} color="#059669" />
+    <div style={css.overlay}>
+      <div style={{ ...css.card, textAlign: 'center', padding: '2.5rem 1.75rem' }}>
+        <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'linear-gradient(135deg, #d1fae5, #6ee7b7)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+          <ShieldCheck size={36} color="#059669" />
         </div>
-        <div style={{ fontWeight: '800', fontSize: '1.2rem', color: '#0f172a' }}>Login Successful!</div>
-        <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.4rem' }}>Redirecting you now...</div>
+        <div style={{ fontWeight: '800', fontSize: '1.25rem', color: '#0f172a' }}>
+          {authMode === 'signup' ? '🎉 Account Created!' : '✅ Login Successful!'}
+        </div>
+        <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+          {authMode === 'signup' ? `Welcome, ${fullName.split(' ')[0]}! Redirecting...` : 'Redirecting to your dashboard...'}
+        </div>
       </div>
+      <style>{globalAnim}</style>
     </div>
   );
 }

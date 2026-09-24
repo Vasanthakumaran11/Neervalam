@@ -19,6 +19,10 @@ class SendOTPRequest(BaseModel):
     # Signup-only fields (required when auth_mode='signup')
     full_name: Optional[str] = Field(None, description="Full name (required for signup)")
     district:  Optional[str] = Field(None, description="District (required for signup)")
+    # Govt official signup field
+    job_title: Optional[str] = Field(None, description="Job designation for govt official")
+    # Farmer signup field
+    iot_hub_id: Optional[str] = Field(None, description="IoT Hub device ID installed at farmer's well")
 
 class SendOTPResponse(BaseModel):
     success: bool
@@ -43,8 +47,10 @@ class VerifyOTPRequest(BaseModel):
     role: UserRole = Field(default=UserRole.FARMER)
     auth_mode: AuthMode = Field(default=AuthMode.LOGIN)
     # Signup carry-over fields
-    full_name: Optional[str] = None
-    district:  Optional[str] = "Thanjavur"
+    full_name:  Optional[str] = None
+    district:   Optional[str] = "Thanjavur"
+    job_title:  Optional[str] = None    # Govt official designation
+    iot_hub_id: Optional[str] = None    # Farmer's IoT device ID
 
 class UserProfile(BaseModel):
     id: str
@@ -52,6 +58,8 @@ class UserProfile(BaseModel):
     full_name: Optional[str] = None
     role: UserRole
     district: Optional[str] = None
+    job_title: Optional[str] = None    # Govt official designation
+    iot_hub_id: Optional[str] = None   # Farmer's IoT device ID
     is_active: bool = True
 
 class AuthTokenResponse(BaseModel):

@@ -27,7 +27,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication & OTP"])
 security = HTTPBearer(auto_error=False)
 
 # In-Memory OTP Store (dev / mock mode)
-# Key: normalized_phone  →  (otp_code, expires_at, role, auth_mode, full_name, district)
+# Key: normalized_phone  →  (otp_code, expires_at, role, auth_mode, full_name, district, job_title, iot_hub_id)
 _DEV_OTP_STORE: Dict[str, tuple] = {}
 
 # In-Memory "registered users" store for dev mode (phone → profile dict)
@@ -153,6 +153,10 @@ async def send_mobile_otp(req: SendOTPRequest):
             raise HTTPException(status_code=422, detail="Full name is required for signup.")
         if not req.district or not req.district.strip():
             raise HTTPException(status_code=422, detail="District is required for signup.")
+        if req.role == UserRole.FARMER and (not req.iot_hub_id or not req.iot_hub_id.strip()):
+            raise HTTPException(status_code=422, detail="Farmer signup requires the installed IoT device ID for the well.")
+        if req.role == UserRole.GOVERNMENT_OFFICIAL and (not req.job_title or not req.job_title.strip()):
+            raise HTTPException(status_code=422, detail="Government signup requires a job title.")
 
     elif req.auth_mode == AuthMode.LOGIN:
         if not is_registered:
@@ -181,7 +185,7 @@ async def send_mobile_otp(req: SendOTPRequest):
     expiry = time.time() + 300
     _DEV_OTP_STORE[phone] = (
         otp_code, expiry, req.role, req.auth_mode,
-        req.full_name, req.district,
+        req.full_name, req.district, req.job_title, req.iot_hub_id,
     )
     logger.info(f"[DEV OTP] {phone} ({req.auth_mode.value}) → {otp_code}")
 
@@ -236,6 +240,8 @@ async def verify_mobile_otp(req: VerifyOTPRequest):
     # ── Determine name & district ──────────────────────────────────────────────
     display_name = req.full_name
     district = req.district or "Thanjavur"
+    job_title = req.job_title
+    iot_hub_id = req.iot_hub_id
 
     # For LOGIN: fetch existing profile name if not provided
     if req.auth_mode == AuthMode.LOGIN and not display_name:
@@ -244,11 +250,15 @@ async def verify_mobile_otp(req: VerifyOTPRequest):
             if existing:
                 display_name = existing.get("full_name", "")
                 district = existing.get("district", district)
+                job_title = existing.get("job_title", job_title)
+                iot_hub_id = existing.get("iot_hub_id", iot_hub_id)
                 req.role = UserRole(existing.get("role", req.role.value))
         elif phone in _DEV_USER_STORE:
             u = _DEV_USER_STORE[phone]
             display_name = u.get("full_name", "")
             district = u.get("district", district)
+            job_title = u.get("job_title", job_title)
+            iot_hub_id = u.get("iot_hub_id", iot_hub_id)
 
     display_name = display_name or (
         "Farmer " + phone[-4:] if req.role == UserRole.FARMER else "Official " + phone[-4:]
@@ -261,6 +271,8 @@ async def verify_mobile_otp(req: VerifyOTPRequest):
         "full_name": display_name,
         "role": req.role.value,
         "district": district,
+        "job_title": job_title,
+        "iot_hub_id": iot_hub_id,
         "is_active": True,
     }
 
@@ -280,17 +292,20 @@ async def verify_mobile_otp(req: VerifyOTPRequest):
         "role": req.role.value,
         "name": display_name,
         "district": district,
+        "job_title": job_title,
+        "iot_hub_id": iot_hub_id,
     }
     jwt_token = create_access_token(token_claims)
 
-    redirect_path = "/government" if req.role == UserRole.GOVERNMENT_OFFICIAL else "/users/selvam-thanjavur"
+    redirect_path = "/government" if req.role == UserRole.GOVERNMENT_OFFICIAL else f"/users/{user_id}"
 
     return AuthTokenResponse(
         access_token=jwt_token,
         token_type="bearer",
         user=UserProfile(
             id=user_id, phone=phone, full_name=display_name,
-            role=req.role, district=district, is_active=True,
+            role=req.role, district=district,
+            job_title=job_title, iot_hub_id=iot_hub_id, is_active=True,
         ),
         redirect_path=redirect_path,
         is_new_user=is_new_user,
@@ -309,5 +324,7 @@ async def get_current_user_profile(token_data: Dict[str, Any] = Depends(decode_t
         full_name=token_data.get("name", ""),
         role=UserRole(token_data.get("role", "farmer")),
         district=token_data.get("district", "Thanjavur"),
+        job_title=token_data.get("job_title"),
+        iot_hub_id=token_data.get("iot_hub_id"),
         is_active=True,
     )

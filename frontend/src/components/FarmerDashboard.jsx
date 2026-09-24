@@ -36,7 +36,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
-import { FARMER_USERS, getFarmerUser } from '../data/farmerUserData';
+import { resolveFarmerProfile } from '../data/farmerUserData';
 
 // Register Chart.js components
 ChartJS.register(
@@ -52,6 +52,7 @@ ChartJS.register(
 
 export default function FarmerDashboard({ 
   userId = 'selvam-thanjavur',
+  userProfile = null,
   onNavigate,
   theme = 'dark'
 }) {
@@ -60,8 +61,10 @@ export default function FarmerDashboard({
   const [simulatedMinutes, setSimulatedMinutes] = useState(0);
 
   const farmer = useMemo(() => {
-    return getFarmerUser(selectedFarmerId);
-  }, [selectedFarmerId]);
+    return resolveFarmerProfile(selectedFarmerId, userProfile);
+  }, [selectedFarmerId, userProfile]);
+
+  const displayName = userProfile?.full_name || farmer.name;
 
   const handleFarmerChange = (newId) => {
     setSelectedFarmerId(newId);
@@ -208,29 +211,11 @@ export default function FarmerDashboard({
           </div>
         </div>
 
-        {/* Farmer Profile Switcher & Telemetry Pulse */}
+        {/* Farmer profile summary & telemetry pulse */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.35rem 0.75rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>Active Farmer:</span>
-            <select
-              value={selectedFarmerId}
-              onChange={(e) => handleFarmerChange(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#38bdf8',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {Object.values(FARMER_USERS).map(u => (
-                <option key={u.id} value={u.id} style={{ background: '#0f172a', color: '#f8fafc' }}>
-                  {u.name} ({u.location.split(',')[0]})
-                </option>
-              ))}
-            </select>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Farmer:</span>
+            <span style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.85rem' }}>{displayName}</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: 'var(--emerald-safe)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.35rem 0.65rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
@@ -264,7 +249,7 @@ export default function FarmerDashboard({
           </div>
           <div>
             <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f8fafc' }}>
-              {farmer.name}
+              {displayName}
             </div>
             <div style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: '600' }}>
               {farmer.tamilName}

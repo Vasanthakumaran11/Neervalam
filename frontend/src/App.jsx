@@ -106,7 +106,6 @@ function AppInner() {
     if (loggedInUser?.role === 'government_official') {
       navigateTo('/government');
     } else {
-      // Farmer: route to their profile (use phone-based id or default)
       const farmerId = loggedInUser?.id || 'selvam-thanjavur';
       navigateTo(`/users/${farmerId}`);
     }
@@ -127,6 +126,7 @@ function AppInner() {
     if (!isAuthenticated || !user) return null;
     const roleColor = role === 'farmer' ? '#10b981' : '#38bdf8';
     const roleLabel = role === 'farmer' ? '🌾 Farmer' : '🏛️ Gov Official';
+    const profileName = user.full_name || user.phone || user.id;
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <div style={{
@@ -136,7 +136,13 @@ function AppInner() {
           display: 'flex', alignItems: 'center', gap: '0.35rem'
         }}>
           <User size={12} />
-          <span>{user.phone || user.id}</span>
+          <span>{profileName}</span>
+          {user.job_title && (
+            <>
+              <span style={{ opacity: 0.55 }}>·</span>
+              <span>{user.job_title}</span>
+            </>
+          )}
           <span style={{ opacity: 0.55 }}>·</span>
           <span>{roleLabel}</span>
         </div>
@@ -167,6 +173,7 @@ function AppInner() {
           onLoginClick={() => setLoginModalOpen(true)}
           isAuthenticated={isAuthenticated}
           userRole={role}
+          userId={user?.id || 'selvam-thanjavur'}
         />
         <LoginModal
           isOpen={loginModalOpen}
@@ -211,7 +218,7 @@ function AppInner() {
           </div>
         </div>
 
-        <FarmerDashboard userId={rawUserId} onNavigate={navigateTo} theme={theme} />
+        <FarmerDashboard userId={rawUserId} userProfile={user} onNavigate={navigateTo} theme={theme} />
 
         <LoginModal isOpen={loginModalOpen} onClose={() => { setLoginModalOpen(false); navigateTo('/'); }} onSuccess={handleLoginSuccess} />
       </div>
@@ -241,8 +248,8 @@ function AppInner() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <UserPill />
-          <button className="btn btn-green" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }} onClick={() => navigateTo('/users/selvam-thanjavur')}>
-            <Sprout size={13} /> Farmer Portal (Demo)
+          <button className="btn btn-green" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }} onClick={() => navigateTo(`/users/${user?.id || 'selvam-thanjavur'}`)}>
+            <Sprout size={13} /> Farmer Portal
           </button>
         </div>
       </div>
