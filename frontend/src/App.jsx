@@ -8,10 +8,11 @@ import DistrictAnalytics from './components/DistrictAnalytics';
 import StationsTable from './components/StationsTable';
 import SeasonalTrendsChart from './components/SeasonalTrendsChart';
 import RoadmapVision from './components/RoadmapVision';
+import GovernmentDroughtSection from './components/GovernmentDroughtSection';
 import StationDetailModal from './components/StationDetailModal';
 import LoginModal from './components/LoginModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Home, Sprout, Building2, Sun, Moon, LogOut, User } from 'lucide-react';
+import { Home, Sprout, Building2, Sun, Moon, LogOut, User, ShieldAlert, ArrowRight } from 'lucide-react';
 
 // Import processed CGWB dataset
 import dataset from './data/groundwater_dataset.json';
@@ -106,7 +107,7 @@ function AppInner() {
     if (loggedInUser?.role === 'government_official') {
       navigateTo('/government');
     } else {
-      const farmerId = loggedInUser?.id || 'selvam-thanjavur';
+      const farmerId = loggedInUser?.iot_hub_id || loggedInUser?.id || 'iot-erd-102';
       navigateTo(`/users/${farmerId}`);
     }
   };
@@ -188,7 +189,7 @@ function AppInner() {
   // ROUTE 2: Farmer IoT Dashboard (/users/:userId)
   // ==========================================================================
   if (currentPath.startsWith('/users/')) {
-    const rawUserId = currentPath.replace('/users/', '').split('/')[0] || 'selvam-thanjavur';
+    const rawUserId = currentPath.replace('/users/', '').split('/')[0] || 'iot-erd-102';
     return (
       <div className="app-container">
         <div className="glass-card" style={{
@@ -248,7 +249,7 @@ function AppInner() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <UserPill />
-          <button className="btn btn-green" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }} onClick={() => navigateTo(`/users/${user?.id || 'selvam-thanjavur'}`)}>
+          <button className="btn btn-green" style={{ padding: '0.3rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }} onClick={() => navigateTo(`/users/${user?.iot_hub_id || user?.id || 'iot-erd-102'}`)}>
             <Sprout size={13} /> Farmer Portal
           </button>
         </div>
@@ -269,6 +270,51 @@ function AppInner() {
         totalWells={wells.length}
         onSelectCategory={() => setActiveTab('table')}
       />
+
+      {/* AI Drought Early Warning Quick Access Banner */}
+      <div 
+        className="glass-card" 
+        onClick={() => setActiveTab('drought')}
+        style={{
+          padding: '0.75rem 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+          cursor: 'pointer',
+          background: activeTab === 'drought'
+            ? 'linear-gradient(90deg, rgba(239, 68, 68, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)'
+            : 'linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.08) 50%, rgba(14, 165, 233, 0.08) 100%)',
+          border: '1px solid rgba(245, 158, 11, 0.4)',
+          borderRadius: '12px',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.2)',
+            color: '#ef4444',
+            padding: '0.35rem 0.65rem',
+            borderRadius: '8px',
+            fontSize: '0.75rem',
+            fontWeight: '800',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}>
+            <ShieldAlert size={14} /> LIVE AI DROUGHT HUB
+          </div>
+          <span style={{ fontSize: '0.86rem', fontWeight: '600', color: '#f8fafc' }}>
+            Erode Aquifer Dual-Signal Evaluation Active · Real-Time CGWB Check Dam & ARS Recommendations
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', fontSize: '0.82rem', fontWeight: '700' }}>
+          <span>{activeTab === 'drought' ? 'Currently Viewing AI Hub' : 'Open Drought Hub & View ARS Structures'}</span>
+          <ArrowRight size={14} />
+        </div>
+      </div>
 
       <main style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         {activeTab === 'map' && (
@@ -296,6 +342,7 @@ function AppInner() {
         )}
         {activeTab === 'rainfall' && <SeasonalTrendsChart stateStats={stateStats} />}
         {activeTab === 'roadmap' && <RoadmapVision />}
+        {activeTab === 'drought' && <GovernmentDroughtSection />}
       </main>
 
       {selectedStation && (

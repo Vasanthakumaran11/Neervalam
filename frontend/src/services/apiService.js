@@ -53,28 +53,30 @@ async function request(path, options = {}) {
 // ─── Auth Endpoints ───────────────────────────────────────────────────────────
 
 /**
- * Check if a phone number is already registered.
- * Returns { exists, phone, role, full_name }
+ * Check if an email or phone number is already registered.
+ * Returns { exists, email, phone, role, full_name }
  */
-export async function checkUser(phone) {
+export async function checkUser(emailOrPhone) {
+  const isEmail = String(emailOrPhone).includes('@');
   return request('/auth/check-user', {
     method: 'POST',
-    body: JSON.stringify({ phone }),
+    body: JSON.stringify(isEmail ? { email: emailOrPhone.trim().toLowerCase() } : { phone: emailOrPhone }),
   });
 }
 
 /**
- * Step 1: Request OTP.
- * @param {string} phone  - E.164 format, e.g. "+919876543210"
- * @param {string} role   - 'farmer' | 'government_official'
- * @param {string} authMode - 'login' | 'signup'
- * @param {object} signupData - { full_name, district } — only for signup
+ * Step 1: Request Email/SMS OTP.
+ * @param {string} emailOrPhone - User email (e.g. farmer@gmail.com) or phone
+ * @param {string} role         - 'farmer' | 'government_official'
+ * @param {string} authMode     - 'login' | 'signup'
+ * @param {object} signupData   - { full_name, district, iot_hub_id } — only for signup
  */
-export async function sendOTP(phone, role, authMode = 'login', signupData = {}) {
+export async function sendOTP(emailOrPhone, role, authMode = 'login', signupData = {}) {
+  const isEmail = String(emailOrPhone).includes('@');
   return request('/auth/send-otp', {
     method: 'POST',
     body: JSON.stringify({
-      phone,
+      ...(isEmail ? { email: emailOrPhone.trim().toLowerCase() } : { phone: emailOrPhone }),
       role,
       auth_mode: authMode,
       ...signupData,
@@ -83,19 +85,20 @@ export async function sendOTP(phone, role, authMode = 'login', signupData = {}) 
 }
 
 /**
- * Step 2: Verify OTP and receive JWT token.
- * @param {string} phone
+ * Step 2: Verify OTP and receive JWT session token.
+ * @param {string} emailOrPhone
  * @param {string} otp
  * @param {string} role
- * @param {string} authMode - 'login' | 'signup'
- * @param {object} signupData - { full_name, district } — only for signup
+ * @param {string} authMode     - 'login' | 'signup'
+ * @param {object} signupData   - { full_name, district, iot_hub_id } — only for signup
  */
-export async function verifyOTP(phone, otp, role, authMode = 'login', signupData = {}) {
+export async function verifyOTP(emailOrPhone, otp, role, authMode = 'login', signupData = {}) {
+  const isEmail = String(emailOrPhone).includes('@');
   const data = await request('/auth/verify-otp', {
     method: 'POST',
     body: JSON.stringify({
-      phone,
-      otp,
+      ...(isEmail ? { email: emailOrPhone.trim().toLowerCase() } : { phone: emailOrPhone }),
+      otp: String(otp).trim(),
       role,
       auth_mode: authMode,
       ...signupData,

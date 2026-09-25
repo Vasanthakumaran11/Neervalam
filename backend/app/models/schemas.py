@@ -13,7 +13,8 @@ class AuthMode(str, Enum):
 # ─── OTP Request / Response ───────────────────────────────────────────────────
 
 class SendOTPRequest(BaseModel):
-    phone: str = Field(..., description="E.164 phone number, e.g. +919876543210 or 10-digit Indian mobile")
+    email: Optional[str] = Field(None, description="Email address for OTP delivery, e.g. farmer@gmail.com")
+    phone: Optional[str] = Field(None, description="Optional phone number fallback")
     role: UserRole = Field(default=UserRole.FARMER, description="Role intended for login/signup")
     auth_mode: AuthMode = Field(default=AuthMode.LOGIN, description="'login' or 'signup'")
     # Signup-only fields (required when auth_mode='signup')
@@ -27,34 +28,39 @@ class SendOTPRequest(BaseModel):
 class SendOTPResponse(BaseModel):
     success: bool
     message: str
-    phone: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     expires_in_seconds: int = 300
     dev_otp: Optional[str] = None   # Only in mock_dev mode
     is_new_user: Optional[bool] = None  # True = signup, False = returning user
 
 class CheckUserRequest(BaseModel):
-    phone: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
 
 class CheckUserResponse(BaseModel):
     exists: bool
-    phone: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     role: Optional[UserRole] = None
     full_name: Optional[str] = None
 
 class VerifyOTPRequest(BaseModel):
-    phone: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     otp: str = Field(..., min_length=4, max_length=6, description="Received 4-6 digit numeric OTP")
     role: UserRole = Field(default=UserRole.FARMER)
     auth_mode: AuthMode = Field(default=AuthMode.LOGIN)
     # Signup carry-over fields
     full_name:  Optional[str] = None
-    district:   Optional[str] = "Thanjavur"
+    district:   Optional[str] = "Erode"
     job_title:  Optional[str] = None    # Govt official designation
     iot_hub_id: Optional[str] = None    # Farmer's IoT device ID
 
 class UserProfile(BaseModel):
     id: str
-    phone: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
     full_name: Optional[str] = None
     role: UserRole
     district: Optional[str] = None

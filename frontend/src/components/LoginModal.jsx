@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Phone, ShieldCheck, ArrowRight, Loader2, X,
+  Mail, ShieldCheck, ArrowRight, Loader2, X,
   Sprout, Building2, ChevronLeft, User, MapPin,
   LogIn, UserPlus,
 } from 'lucide-react';
@@ -11,8 +11,8 @@ import { useAuth } from '../context/AuthContext';
 const STEP = {
   MODE:    'mode',    // Login / Sign Up choice
   ROLE:    'role',    // Pick role (farmer / govt)
-  SIGNUP:  'signup',  // Signup form (name, phone, district)
-  PHONE:   'phone',   // Login: enter phone
+  SIGNUP:  'signup',  // Signup form (name, email, district)
+  EMAIL:   'email',   // Login: enter email
   OTP:     'otp',     // Enter OTP
   SUCCESS: 'success', // Done
 };
@@ -171,11 +171,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
   const [step,      setStep]      = useState(STEP.MODE);
   const [authMode,  setAuthMode]  = useState('login');   // 'login' | 'signup'
   const [role,      setRole]      = useState('');
-  const [phone,     setPhone]     = useState('');
+  const [email,     setEmail]     = useState('');
   const [fullName,  setFullName]  = useState('');
-  const [district,  setDistrict]  = useState('Thanjavur');
+  const [district,  setDistrict]  = useState('Erode');
   const [jobTitle,  setJobTitle]  = useState('');
-  const [iotHubId,  setIotHubId]  = useState('');
+  const [iotHubId,  setIotHubId]  = useState('IOT-ERD-102');
   const [otp,       setOtp]       = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error,     setError]     = useState('');
@@ -184,11 +184,16 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
 
   if (!isOpen) return null;
 
-  function normalizePhone(raw) {
-    const digits = raw.replace(/\D/g, '');
-    if (digits.startsWith('91') && digits.length === 12) return `+${digits}`;
-    if (digits.length === 10) return `+91${digits}`;
-    return `+${digits}`;
+  function isValidEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  }
+
+  function maskEmail(addr) {
+    if (!addr || !addr.includes('@')) return addr;
+    const [local, domain] = addr.split('@');
+    if (local.length <= 2) return `${local[0]}*@${domain}`;
+    const masked = local[0] + '*'.repeat(Math.max(1, local.length - 2)) + local.slice(-1);
+    return `${masked}@${domain}`;
   }
 
   function startResendTimer() {
@@ -199,38 +204,41 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
   }
 
   function reset() {
-    setStep(STEP.MODE); setRole(''); setPhone(''); setOtp('');
-    setFullName(''); setDistrict('Thanjavur'); setJobTitle(''); setIotHubId(''); setError('');
+    setStep(STEP.MODE); setRole(''); setEmail(''); setOtp('');
+    setFullName(''); setDistrict('Erode'); setJobTitle(''); setIotHubId('IOT-ERD-102'); setError('');
     setExistingUserName('');
   }
 
   function focusColor() { return role === 'government_official' ? '#0284c7' : '#059669'; }
   function headerColor() { return role === 'government_official' ? 'blue' : 'green'; }
 
-  // ── LOGIN: Phone Submit → check if registered → send OTP ──────────────────
-  async function handleLoginPhone(e) {
+  // ── LOGIN: Email Submit → check if registered → send OTP ──────────────────
+  async function handleLoginEmail(e) {
     e.preventDefault();
     setError('');
-    const normalized = normalizePhone(phone);
-    if (normalized.length < 12) { setError('Enter a valid 10-digit mobile number.'); return; }
+    const normalized = email.trim().toLowerCase();
+    if (!isValidEmail(normalized)) {
+      setError('Please enter a valid email address (e.g. farmer.erode@gmail.com).');
+      return;
+    }
     setIsLoading(true);
     try {
       // Check if user exists
       const check = await checkUser(normalized);
       if (!check.exists) {
-        setError('This number is not registered. Please sign up first.');
+        setError('This email is not registered yet. Please click Sign Up first.');
         setIsLoading(false);
         return;
       }
       setExistingUserName(check.full_name || '');
       // Send OTP
       await sendOTP(normalized, check.role || role || 'farmer', 'login');
-      setPhone(normalized);
+      setEmail(normalized);
       if (check.role) setRole(check.role);
       setStep(STEP.OTP);
       startResendTimer();
     } catch (err) {
-      setError(err.message || 'Failed to send OTP. Please try again.');
+      setError(err.message || 'Failed to send OTP to email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -241,8 +249,11 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
     e.preventDefault();
     setError('');
     if (!fullName.trim()) { setError('Please enter your full name.'); return; }
-    const normalized = normalizePhone(phone);
-    if (normalized.length < 12) { setError('Enter a valid 10-digit mobile number.'); return; }
+    const normalized = email.trim().toLowerCase();
+    if (!isValidEmail(normalized)) {
+      setError('Please enter a valid email address (e.g. farmer.erode@gmail.com).');
+      return;
+    }
     if (!district) { setError('Please select your district.'); return; }
     if (role === 'farmer' && !iotHubId.trim()) {
       setError('Please enter the installed IoT device ID for the farmer well.');
@@ -260,7 +271,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
         ...(role === 'farmer' ? { iot_hub_id: iotHubId.trim() } : { job_title: jobTitle.trim() }),
       };
       await sendOTP(normalized, role, 'signup', signupData);
-      setPhone(normalized);
+      setEmail(normalized);
       setStep(STEP.OTP);
       startResendTimer();
     } catch (err) {
@@ -284,12 +295,13 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
             ...(role === 'farmer' ? { iot_hub_id: iotHubId } : { job_title: jobTitle }),
           }
         : {};
-      const authData = await verifyOTP(phone, otp, role || 'farmer', authMode, signupData);
+      const normalized = email.trim().toLowerCase();
+      const authData = await verifyOTP(normalized, otp, role || 'farmer', authMode, signupData);
       login(authData);
       setStep(STEP.SUCCESS);
       setTimeout(() => { onClose(); if (onSuccess) onSuccess(authData.user); }, 1200);
     } catch (err) {
-      setError(err.message || 'Invalid OTP. Please try again.');
+      setError(err.message || 'Invalid OTP code. Please check and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -308,7 +320,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
             ...(role === 'farmer' ? { iot_hub_id: iotHubId } : { job_title: jobTitle }),
           }
         : {};
-      await sendOTP(phone, role || 'farmer', authMode, signupData);
+      const normalized = email.trim().toLowerCase();
+      await sendOTP(normalized, role || 'farmer', authMode, signupData);
       startResendTimer();
     } catch (err) { setError(err.message); }
     finally { setIsLoading(false); }
@@ -355,32 +368,32 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
             {authMode === 'login' ? (
               <>
                 <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-                  Enter your registered mobile number — we'll send a one-time password to verify it's you.
+                  Enter your registered email address — we'll send a 6-digit OTP verification code to your inbox.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                   <RoleCard
                     icon={<Sprout size={22} color="#059669" />}
-                    title="Login as Farmer" desc="IoT dashboard, pump control & irrigation advisory"
+                    title="Login as Farmer" desc="IoT dashboard, well telemetry & irrigation advisory"
                     accentColor="#10b981" bgColor="#d1fae5"
-                    onClick={() => { setRole('farmer'); setAuthMode('login'); setStep(STEP.PHONE); setError(''); }}
+                    onClick={() => { setRole('farmer'); setAuthMode('login'); setStep(STEP.EMAIL); setError(''); }}
                   />
                   <RoleCard
                     icon={<Building2 size={22} color="#0284c7" />}
                     title="Login as Government Official" desc="State GIS map, district analytics & policy data"
                     accentColor="#0ea5e9" bgColor="#dbeafe"
-                    onClick={() => { setRole('government_official'); setAuthMode('login'); setStep(STEP.PHONE); setError(''); }}
+                    onClick={() => { setRole('government_official'); setAuthMode('login'); setStep(STEP.EMAIL); setError(''); }}
                   />
                 </div>
               </>
             ) : (
               <>
                 <p style={{ fontSize: '0.85rem', color: '#475569', marginBottom: '1.25rem', lineHeight: '1.5' }}>
-                  Create your Neervalam account. Choose your role to get started.
+                  Create your Neervalam account. Choose your role to get started with instant Email OTP.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                   <RoleCard
                     icon={<Sprout size={22} color="#059669" />}
-                    title="Sign Up as Farmer" desc="Register with your farm & IoT sensor details"
+                    title="Sign Up as Farmer" desc="Register with your farm & Erode IoT sensor details"
                     accentColor="#10b981" bgColor="#d1fae5"
                     onClick={() => { setRole('farmer'); setAuthMode('signup'); setStep(STEP.SIGNUP); setError(''); }}
                   />
@@ -395,7 +408,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
             )}
 
             <p style={{ textAlign: 'center', fontSize: '0.72rem', color: '#94a3b8', marginTop: '1.25rem' }}>
-              🔒 Secure OTP login · No password needed · Data encrypted
+              🔒 Secure Email OTP login · No password needed · Instant verification
             </p>
           </div>
         </div>
@@ -418,7 +431,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
         <div style={{ ...css.card, maxWidth: '460px' }}>
           <ModalHeader
             title={`Create ${roleLabel} Account`}
-            subtitle="Fill in your details — OTP will be sent to verify your mobile"
+            subtitle="Fill in your details — 6-digit OTP will be sent to verify your email"
             icon={<div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.3rem 0.85rem', marginBottom: '0.5rem' }}><RoleIcon size={14} /><span style={{ fontSize: '0.78rem', fontWeight: '600' }}>{roleLabel}</span></div>}
             color={hColor}
             onBack={() => { setStep(STEP.MODE); setError(''); }}
@@ -444,22 +457,21 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
                 </div>
               </div>
 
-              {/* Mobile Number */}
+              {/* Email Address */}
               <div>
-                <label style={css.label}>Mobile Number <span style={{ color: '#ef4444' }}>*</span></label>
+                <label style={css.label}>Email Address <span style={{ color: '#ef4444' }}>*</span></label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ position: 'absolute', left: '1rem', fontWeight: '700', fontSize: '0.95rem', color: '#334155', pointerEvents: 'none', userSelect: 'none' }}>+91</span>
                   <input
-                    type="tel" inputMode="numeric" maxLength={10}
-                    placeholder="98765 43210"
-                    value={phone.replace(/^\+91/, '')}
-                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                    style={{ ...css.input, paddingLeft: '3.25rem', letterSpacing: '0.06em' }}
+                    type="email"
+                    placeholder="e.g. farmer.erode@gmail.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    style={{ ...css.input, paddingRight: '2.5rem' }}
                     onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
                     onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                     required
                   />
-                  <Phone size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
+                  <Mail size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
                 </div>
               </div>
 
@@ -484,17 +496,42 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
 
               {role === 'farmer' ? (
                 <div>
-                  <label style={css.label}>Installed IoT Device ID <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                    <label style={{ ...css.label, marginBottom: 0 }}>Installed IoT Device ID <span style={{ color: '#ef4444' }}>*</span></label>
+                    <button
+                      type="button"
+                      onClick={() => setIotHubId(`IOT-ERD-${Math.floor(101 + Math.random() * 90)}`)}
+                      style={{
+                        background: 'rgba(5, 150, 105, 0.1)',
+                        border: '1px solid rgba(5, 150, 105, 0.3)',
+                        borderRadius: '6px',
+                        color: '#059669',
+                        fontSize: '0.72rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        padding: '0.2rem 0.5rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem'
+                      }}
+                      title="Generate a real Erode well IoT ID"
+                    >
+                      🎲 Randomize Erode IoT (e.g. IOT-ERD-102)
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={iotHubId}
                     onChange={e => setIotHubId(e.target.value)}
-                    placeholder="e.g. IOT-TNJ-DELTA-4081"
+                    placeholder="e.g. IOT-ERD-102"
                     style={{ ...css.input }}
                     onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
                     onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                     required
                   />
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.35rem' }}>
+                    Automatically binds your dashboard to one of Erode's 63 CGWB well monitoring stations.
+                  </div>
                 </div>
               ) : (
                 <div>
@@ -518,7 +555,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
               {error && <div style={css.error}>⚠️ {error}</div>}
 
               <button type="submit" disabled={isLoading} style={{ ...css.btnPrimary(hColor), opacity: isLoading ? 0.75 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}>
-                {isLoading ? <><LoadingSpinner /> Sending OTP...</> : <>Send OTP to Verify <ArrowRight size={17} /></>}
+                {isLoading ? <><LoadingSpinner /> Sending OTP...</> : <>Send Email OTP <ArrowRight size={17} /></>}
               </button>
             </form>
 
@@ -537,9 +574,9 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
   }
 
   // ==========================================================================
-  // STEP: PHONE — Login phone entry
+  // STEP: EMAIL — Login email entry
   // ==========================================================================
-  if (step === STEP.PHONE) {
+  if (step === STEP.EMAIL) {
     const roleLabel = role === 'farmer' ? 'Farmer' : 'Government Official';
     const RoleIcon  = role === 'farmer' ? Sprout : Building2;
     const hColor    = headerColor();
@@ -549,8 +586,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
       <div style={css.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
         <div style={css.card}>
           <ModalHeader
-            title="Enter Your Mobile Number"
-            subtitle="We'll send a one-time password to verify your identity"
+            title="Enter Your Email Address"
+            subtitle="We'll send a 6-digit verification code to your inbox"
             icon={<div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.3rem 0.85rem', marginBottom: '0.5rem' }}><RoleIcon size={14} /><span style={{ fontSize: '0.78rem', fontWeight: '600' }}>{roleLabel}</span></div>}
             color={hColor}
             onBack={() => { setStep(STEP.MODE); setError(''); }}
@@ -558,29 +595,28 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
           />
 
           <div style={css.body}>
-            <form onSubmit={handleLoginPhone} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleLoginEmail} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={css.label}>Registered Mobile Number</label>
+                <label style={css.label}>Registered Email Address</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ position: 'absolute', left: '1rem', fontWeight: '700', fontSize: '0.95rem', color: '#334155', pointerEvents: 'none', userSelect: 'none' }}>+91</span>
                   <input
-                    type="tel" inputMode="numeric" maxLength={10}
-                    placeholder="98765 43210"
-                    value={phone.replace(/^\+91/, '')}
-                    onChange={e => setPhone(e.target.value.replace(/\D/g, ''))}
-                    style={{ ...css.input, paddingLeft: '3.25rem', letterSpacing: '0.1em', fontSize: '1.05rem' }}
+                    type="email"
+                    placeholder="e.g. farmer.erode@gmail.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    style={{ ...css.input, paddingRight: '2.5rem', fontSize: '0.95rem' }}
                     onFocus={e => { e.target.style.borderColor = fColor; e.target.style.boxShadow = `0 0 0 3px ${fColor}22`; }}
                     onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                     autoFocus required
                   />
-                  <Phone size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
+                  <Mail size={16} color="#94a3b8" style={{ position: 'absolute', right: '0.9rem', pointerEvents: 'none' }} />
                 </div>
               </div>
 
               {error && <div style={css.error}>⚠️ {error}</div>}
 
               <button type="submit" disabled={isLoading} style={{ ...css.btnPrimary(hColor), opacity: isLoading ? 0.75 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}>
-                {isLoading ? <><LoadingSpinner /> Checking...</> : <>Send OTP <ArrowRight size={17} /></>}
+                {isLoading ? <><LoadingSpinner /> Checking...</> : <>Send Email OTP <ArrowRight size={17} /></>}
               </button>
             </form>
 
@@ -604,28 +640,31 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
   if (step === STEP.OTP) {
     const hColor = headerColor();
     const fColor = focusColor();
-    const maskedPhone = phone.slice(0, 3) + '·····' + phone.slice(-4);
+    const masked = maskEmail(email);
 
     return (
       <div style={css.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
         <div style={css.card}>
           <ModalHeader
-            title="Verify OTP"
-            subtitle={<>OTP sent to <strong>{maskedPhone}</strong>{existingUserName ? ` · Welcome back, ${existingUserName.split(' ')[0]}!` : ''}</>}
+            title="Verify Email OTP"
+            subtitle={<>Verification code sent to <strong>{masked}</strong>{existingUserName ? ` · Welcome back, ${existingUserName.split(' ')[0]}!` : ''}</>}
             icon={<ShieldCheck size={30} style={{ marginBottom: '0.4rem', opacity: 0.9 }} />}
             color={hColor}
-            onBack={() => { setStep(authMode === 'signup' ? STEP.SIGNUP : STEP.PHONE); setError(''); setOtp(''); }}
+            onBack={() => { setStep(authMode === 'signup' ? STEP.SIGNUP : STEP.EMAIL); setError(''); setOtp(''); }}
             onClose={onClose}
           />
 
           <div style={css.body}>
-            <div style={css.devHint}>
-              🧪 <span><strong>Dev mode:</strong> OTP is always <code style={{ background: '#fef3c7', padding: '0.1rem 0.35rem', borderRadius: '4px', fontWeight: '700', letterSpacing: '0.1em' }}>123456</code></span>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '0.75rem 0.9rem', fontSize: '0.8rem', color: '#166534', display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '1rem' }}>
+              <span style={{ fontSize: '1.1rem' }}>📩</span>
+              <div>
+                <strong>Check your email inbox:</strong> A 6-digit verification code has been dispatched. Valid for 5 minutes. If not seen, please check your Spam/Junk folder.
+              </div>
             </div>
 
             <form onSubmit={handleVerifyOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label style={{ ...css.label, textAlign: 'center', marginBottom: '0.6rem' }}>Enter 6-Digit OTP</label>
+                <label style={{ ...css.label, textAlign: 'center', marginBottom: '0.6rem' }}>Enter 6-Digit Email OTP</label>
                 <input
                   type="text" inputMode="numeric" maxLength={6}
                   placeholder="· · · · · ·"
@@ -644,14 +683,14 @@ export default function LoginModal({ isOpen, onClose, onSuccess }) {
                 style={{ ...css.btnPrimary(hColor), opacity: (isLoading || otp.length !== 6) ? 0.65 : 1, cursor: (isLoading || otp.length !== 6) ? 'not-allowed' : 'pointer' }}>
                 {isLoading
                   ? <><LoadingSpinner /> Verifying...</>
-                  : <>{authMode === 'signup' ? 'Create Account' : 'Login'} <ShieldCheck size={17} /></>}
+                  : <>{authMode === 'signup' ? 'Create Account' : 'Verify & Login'} <ShieldCheck size={17} /></>}
               </button>
 
               <div style={{ textAlign: 'center', fontSize: '0.8rem', color: '#64748b' }}>
                 Didn't receive it?{' '}
                 <button type="button" onClick={handleResend} disabled={resendTimer > 0 || isLoading}
                   style={{ background: 'none', border: 'none', color: resendTimer > 0 ? '#94a3b8' : fColor, fontWeight: '700', cursor: resendTimer > 0 ? 'default' : 'pointer', fontSize: '0.8rem', padding: 0 }}>
-                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+                  {resendTimer > 0 ? `Resend code in ${resendTimer}s` : 'Resend Email OTP'}
                 </button>
               </div>
             </form>

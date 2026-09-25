@@ -33,9 +33,18 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
-    # OTP Authentication Mode: 'supabase' or 'mock_dev'
-    OTP_MODE: str = "mock_dev"
-    DEFAULT_DEV_OTP: str = "123456"
+    # OTP Authentication Mode: 'smtp', 'supabase', or 'mock_dev'
+    OTP_MODE: str = "smtp"
+    DEFAULT_DEV_OTP: str = ""  # If empty, real random 6-digit OTP is enforced
+
+    # Real Email / SMTP Settings
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "Neervalam Water Portal"
+    SMTP_USE_TLS: bool = True
 
     # CORS origins - stored as a comma-separated string in .env
     CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:5173,http://localhost:3001,http://127.0.0.1:3000"
@@ -45,7 +54,11 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.CORS_ORIGINS_STR.split(",") if origin.strip()]
 
     class Config:
-        env_file = ".env"
+        _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        env_file = (
+            os.path.join(_backend_dir, ".env"),
+            ".env",
+        )
         extra = "allow"
 
 settings = Settings()
