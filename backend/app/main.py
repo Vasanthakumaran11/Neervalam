@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_supabase
-from app.routers import auth, users, groundwater
+from app.routers import auth, users, groundwater, ai_alerts
 
 # Configure logging
 logging.basicConfig(
@@ -41,6 +41,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(users.router, prefix=settings.API_V1_STR)
 app.include_router(groundwater.router, prefix=settings.API_V1_STR)
+app.include_router(ai_alerts.router)
 
 @app.get("/health", tags=["Health"])
 async def health_check():

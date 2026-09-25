@@ -37,6 +37,7 @@ import {
   Filler
 } from 'chart.js';
 import { resolveFarmerProfile } from '../data/farmerUserData';
+import FarmerAiForecastSection from './FarmerAiForecastSection';
 
 // Register Chart.js components
 ChartJS.register(
@@ -71,6 +72,11 @@ export default function FarmerDashboard({
     if (onNavigate) {
       onNavigate(`/users/${newId}`);
     }
+  };
+
+  const randomizeErodeWell = () => {
+    const randomId = `IOT-ERD-${Math.floor(101 + Math.random() * 90)}`;
+    handleFarmerChange(randomId.toLowerCase());
   };
 
   // Toggle pump simulation
@@ -222,6 +228,16 @@ export default function FarmerDashboard({
             <div className="pulse-indicator" />
             <span>IoT Live (LoRaWAN)</span>
           </div>
+
+          <button 
+            className="btn btn-secondary"
+            onClick={randomizeErodeWell}
+            style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+            title="Randomly switch to any of Erode's 63 CGWB well monitoring stations"
+          >
+            <RefreshCw size={14} color="#38bdf8" />
+            <span>Switch Erode Well (IoT Live)</span>
+          </button>
 
           <button 
             className="btn btn-water"
@@ -414,9 +430,17 @@ export default function FarmerDashboard({
         )}
 
       </div>
+ 
+       {/* AI 30/60/90-Day Water Level Forecast & Critical Alert Section */}
+       <FarmerAiForecastSection
+         key={`${farmer.id}-${well.currentDepthBgl}-${farmer.iotHubId}`}
+         wellId={farmer.id || 'NVW001'}
+         initialDepth={Number(well.currentDepthBgl) || 12.8}
+         initialPumpDepth={well.totalDepthMeters ? Math.round(well.totalDepthMeters * 0.7) : 24.0}
+       />
 
-      {/* 4 In-Situ IoT Telemetry Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
+       {/* 4 In-Situ IoT Telemetry Cards Grid */}
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
         
         {/* Card 1: Well Piezometer */}
         <div className="glass-card hover-lift" style={{ padding: '1.25rem' }}>

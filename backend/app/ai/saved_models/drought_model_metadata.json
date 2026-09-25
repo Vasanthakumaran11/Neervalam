@@ -1,0 +1,47 @@
+{
+  "features": [
+    "wl_t_mbgl",
+    "wl_t_minus_hist_mean_m",
+    "month_t",
+    "rain_30d_mm",
+    "rain_90d_mm",
+    "et0_30d_mm",
+    "temp_mean_30d_c",
+    "block_code"
+  ],
+  "labels": [
+    "Normal",
+    "Watch",
+    "Warning",
+    "Emergency"
+  ],
+  "accuracy": 1.0,
+  "f1_macro": 1.0,
+  "f1_weighted": 1.0,
+  "confusion_matrix": [
+    [
+      1449,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      312,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      210,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      9
+    ]
+  ]
+}

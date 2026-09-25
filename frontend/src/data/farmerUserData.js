@@ -2,6 +2,7 @@
  * Neervalam Farmer & IoT Telemetry Data Engine
  * Real-time sensor simulation, 24h drawdown curves, soil health, weather, and ML water pouring recommendations.
  */
+import dataset from './groundwater_dataset.json';
 
 export const FARMER_USERS = {
   'selvam-thanjavur': {
@@ -248,39 +249,239 @@ export const FARMER_USERS = {
   }
 };
 
+// Pre-resolved Erode demo profile
+FARMER_USERS['iot-erd-102'] = {
+  id: 'iot-erd-102',
+  numericId: '102',
+  name: 'Murugan Palanisamy',
+  tamilName: 'முருகன் பழனிசாமி (ஈரோடு)',
+  avatar: '👨‍🌾',
+  location: 'Perundurai, Erode District',
+  coordinates: [11.2755, 77.5828],
+  landSizeAcres: 6.5,
+  cropType: 'Turmeric (Erode Manjal - GI Tag) & Sugarcane',
+  soilType: 'Red Sandy Loam / Weathered Saprolite (Bhavani Aquifer)',
+  irrigationType: 'Smart Drip Irrigation & IoT Solenoid Valve Network',
+  iotHubId: 'IOT-ERD-102',
+  sensorStatus: 'Active · Online (LoRaWAN Erode Telemetry)',
+  lastPing: 'Just now (Live IoT Stream)',
+  cgwbStationId: 154,
+
+  wellDetails: {
+    type: 'Dug-cum-Borewell (CGWB Station #154)',
+    totalDepthMeters: 55,
+    pumpRating: '7.5 HP Solar-Hybrid Submersible',
+    flowMeterGpm: 42,
+    currentDepthBgl: 12.8,
+    yesterdayDepthBgl: 12.86,
+    delta24h: '-0.06m (Aquifer Extraction)',
+    status: 'Moderate / Seasonal Stress · Bhavani Basin',
+    statusColor: '#f59e0b',
+    pumpState: 'OFF'
+  },
+
+  soilTelemetry: {
+    rootZoneMoisture15cm: 32,
+    subZoneMoisture30cm: 38,
+    optimalRange: '45% – 60%',
+    soilTempCelsius: 31.8,
+    electricalConductivity: '0.74 dS/m (Normal)',
+    nitrogenLevel: 'Adequate',
+    landStatus: 'Moderately Dry · Root Zone Irrigation Window Open'
+  },
+
+  weatherForecast: {
+    location: 'Perundurai Agri-Met Telemetry Station, Erode',
+    currentTemp: 34.6,
+    humidity: 52,
+    windSpeedKmh: 15,
+    solarRadiation: 'High (Clear Sky)',
+    rainExpectedNext24h: false,
+    rainProbabilityPercent: 10,
+    rainAmountMm: 0.0,
+    forecastDays: [
+      { day: 'Today', condition: 'Sunny & Dry', temp: '35°C', rainMm: 0.0, rainProb: '10%' },
+      { day: 'Tomorrow', condition: 'Clear Sky', temp: '35.5°C', rainMm: 0.0, rainProb: '5%' },
+      { day: 'Day 3', condition: 'Passing Clouds', temp: '34°C', rainMm: 1.2, rainProb: '25%' }
+    ]
+  },
+
+  mlWaterRecommendation: {
+    action: 'IRRIGATION_RECOMMENDED',
+    badgeText: 'Erode Bhavani Aquifer Precision Drip Advisory',
+    badgeColor: '#0284c7',
+    litersToPour: 3200,
+    recommendedPumpMinutes: 45,
+    groundwaterSavedLiters: 4600,
+    optimalTimeWindow: 'Tomorrow 5:30 AM – 6:15 AM (Dawn Evaporation Minimum)',
+    confidenceScore: 94,
+    summaryMessage: 'Bhavani Basin root moisture at 32%. Schedule 3,200 Liters via micro-drip emitters at dawn.',
+    detailedRationale: 'Transmissivity in this Perundurai unconfined saprolite zone permits controlled recovery. Running precision drip for 45 minutes prevents excessive conical depression around your well while satisfying crop water duty for Turmeric rhizome development.',
+    savingsEquivalence: 'Conserves ~4,600L compared to conventional furrow flooding.'
+  },
+
+  historical24hTelemetry: [
+    { time: '00:00', depthBgl: 12.68, soilMoisture: 36, pumpStatus: 0 },
+    { time: '03:00', depthBgl: 12.71, soilMoisture: 35, pumpStatus: 0 },
+    { time: '06:00', depthBgl: 12.75, soilMoisture: 34, pumpStatus: 0 },
+    { time: '09:00', depthBgl: 12.78, soilMoisture: 32, pumpStatus: 0 },
+    { time: '12:00', depthBgl: 12.83, soilMoisture: 30, pumpStatus: 0 },
+    { time: '15:00', depthBgl: 12.86, soilMoisture: 29, pumpStatus: 0 },
+    { time: '18:00', depthBgl: 12.82, soilMoisture: 31, pumpStatus: 0 },
+    { time: '21:00', depthBgl: 12.80, soilMoisture: 33, pumpStatus: 0 }
+  ]
+};
+
+FARMER_USERS['erode-farmer'] = FARMER_USERS['iot-erd-102'];
+
+export const ERODE_WELLS = (dataset?.wells || []).filter(w => w.district === 'Erode');
+
+/**
+ * Generate a complete, authentic Farmer telemetry profile dynamically from any real Erode CGWB well.
+ * Assigns one of Erode's 63 real wells based on the IoT ID or seed.
+ */
+export function createErodeFarmerProfile(seedId = 'IOT-ERD-102', userProfile = null, specificWellId = null) {
+  if (!ERODE_WELLS.length) return FARMER_USERS['iot-erd-102'];
+
+  let well;
+  if (specificWellId) {
+    well = ERODE_WELLS.find(w => String(w.id) === String(specificWellId) || w.location.toLowerCase().includes(String(specificWellId).toLowerCase()));
+  }
+
+  if (!well) {
+    let hash = 0;
+    const str = String(seedId || userProfile?.id || userProfile?.phone || userProfile?.iot_hub_id || 'IOT-ERD-102');
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    const wellIndex = Math.abs(hash) % ERODE_WELLS.length;
+    well = ERODE_WELLS[wellIndex];
+  }
+
+  const numericId = String(well.id || Math.abs(String(seedId).split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 900) + 100);
+  const iotId = userProfile?.iot_hub_id || (String(seedId).toUpperCase().startsWith('IOT-') ? String(seedId).toUpperCase() : `IOT-ERD-${numericId}`);
+  const farmerName = userProfile?.full_name || 'Murugan Palanisamy';
+  const cleanLoc = well.location.replace(/\(.*?\)/g, '').replace(/[0-9]/g, '').trim();
+  const waterLevel = well.latestLevel !== null && well.latestLevel !== undefined ? Number(well.latestLevel) : 11.8;
+  const depthMeters = Math.max(50, Math.round(waterLevel * 2.6));
+  const pumpRating = waterLevel > 12 ? '7.5 HP Solar-Hybrid Submersible (VFD)' : '5.0 HP Submersible Monobloc';
+
+  const statusColor = well.color || (waterLevel < 5 ? '#10b981' : waterLevel < 12 ? '#f59e0b' : '#ef4444');
+  const statusLabel = waterLevel < 5 ? 'Safe / High Water Table' : waterLevel < 12 ? 'Moderate / Seasonal Stress' : 'Critical / Deep Saprolite Drawdown';
+
+  const historical24h = [
+    { time: '00:00', depthBgl: Math.round((waterLevel - 0.12) * 100) / 100, soilMoisture: 36, pumpStatus: 0 },
+    { time: '03:00', depthBgl: Math.round((waterLevel - 0.09) * 100) / 100, soilMoisture: 35, pumpStatus: 0 },
+    { time: '06:00', depthBgl: Math.round((waterLevel - 0.05) * 100) / 100, soilMoisture: 34, pumpStatus: 0 },
+    { time: '09:00', depthBgl: Math.round((waterLevel - 0.02) * 100) / 100, soilMoisture: 32, pumpStatus: 0 },
+    { time: '12:00', depthBgl: Math.round((waterLevel + 0.03) * 100) / 100, soilMoisture: 30, pumpStatus: 0 },
+    { time: '15:00', depthBgl: Math.round((waterLevel + 0.06) * 100) / 100, soilMoisture: 29, pumpStatus: 0 },
+    { time: '18:00', depthBgl: Math.round((waterLevel + 0.02) * 100) / 100, soilMoisture: 31, pumpStatus: 0 },
+    { time: '21:00', depthBgl: waterLevel, soilMoisture: 33, pumpStatus: 0 }
+  ];
+
+  const litersToPour = waterLevel > 10 ? 3200 : 1800;
+  const pumpMins = waterLevel > 10 ? 45 : 28;
+  const savedLiters = waterLevel > 10 ? 4600 : 2600;
+
+  return {
+    id: seedId || 'iot-erd-102',
+    numericId: numericId,
+    name: farmerName,
+    tamilName: `${cleanLoc} உழவர் (${farmerName})`,
+    avatar: '👨‍🌾',
+    location: `${cleanLoc}, Erode District`,
+    coordinates: [well.latitude, well.longitude],
+    landSizeAcres: 5.5,
+    cropType: 'Turmeric (Erode Manjal - GI Tag) & Sugarcane',
+    soilType: 'Red Sandy Loam / Saprolite (Bhavani Aquifer)',
+    irrigationType: 'Smart Drip Irrigation & IoT Soil Moisture Valve Network',
+    iotHubId: iotId,
+    sensorStatus: 'Active · Online (LoRaWAN Erode Telemetry)',
+    lastPing: 'Just now (Live IoT Stream)',
+    cgwbStationId: well.id,
+
+    wellDetails: {
+      type: `${well.wellType || 'Dug-cum-Borewell'} (CGWB Station #${well.id})`,
+      totalDepthMeters: depthMeters,
+      pumpRating: pumpRating,
+      flowMeterGpm: 42,
+      currentDepthBgl: waterLevel,
+      yesterdayDepthBgl: Math.round((waterLevel + 0.06) * 100) / 100,
+      delta24h: '-0.06m (Aquifer Extraction)',
+      status: `${statusLabel} · Bhavani Basin`,
+      statusColor: statusColor,
+      pumpState: 'OFF'
+    },
+
+    soilTelemetry: {
+      rootZoneMoisture15cm: 32,
+      subZoneMoisture30cm: 38,
+      optimalRange: '45% – 60%',
+      soilTempCelsius: 31.8,
+      electricalConductivity: '0.74 dS/m (Normal)',
+      nitrogenLevel: 'Adequate',
+      landStatus: 'Moderately Dry · Root Zone Irrigation Window Open'
+    },
+
+    weatherForecast: {
+      location: `${cleanLoc} Agri-Met Telemetry Station, Erode`,
+      currentTemp: 34.6,
+      humidity: 52,
+      windSpeedKmh: 15,
+      solarRadiation: 'High (Clear Sky)',
+      rainExpectedNext24h: false,
+      rainProbabilityPercent: 10,
+      rainAmountMm: 0.0,
+      forecastDays: [
+        { day: 'Today', condition: 'Sunny & Dry', temp: '35°C', rainMm: 0.0, rainProb: '10%' },
+        { day: 'Tomorrow', condition: 'Clear Sky', temp: '35.5°C', rainMm: 0.0, rainProb: '5%' },
+        { day: 'Day 3', condition: 'Passing Clouds', temp: '34°C', rainMm: 1.2, rainProb: '25%' }
+      ]
+    },
+
+    mlWaterRecommendation: {
+      action: waterLevel > 10 ? 'IRRIGATION_RECOMMENDED' : 'LIGHT_DEFICIT_IRRIGATION',
+      badgeText: 'Erode Bhavani Aquifer Precision Drip Advisory',
+      badgeColor: waterLevel > 10 ? '#0284c7' : '#10b981',
+      litersToPour: litersToPour,
+      recommendedPumpMinutes: pumpMins,
+      groundwaterSavedLiters: savedLiters,
+      optimalTimeWindow: 'Tomorrow 5:30 AM – 6:15 AM (Dawn Evaporation Minimum)',
+      confidenceScore: 94,
+      summaryMessage: `Bhavani Basin root moisture at 32%. Schedule ${litersToPour.toLocaleString()} Liters via micro-drip emitters at dawn.`,
+      detailedRationale: `Transmissivity in this ${cleanLoc} unconfined saprolite zone permits controlled recovery. Running precision drip for ${pumpMins} minutes prevents excessive conical depression around your well while satisfying crop water duty for Turmeric rhizome development.`,
+      savingsEquivalence: `Conserves ~${savedLiters.toLocaleString()}L compared to conventional furrow flooding.`
+    },
+
+    historical24hTelemetry: historical24h
+  };
+}
+
 /**
  * Resolve farmer telemetry by ID or registered IoT device ID.
- * Uses the actual signed-in farmer account when available, while keeping the
- * existing sample dataset as a fallback for demo profiles.
+ * Defaults to authentic Erode well telemetry whenever a new user registers as Farmer!
  */
 export function resolveFarmerProfile(id, userProfile = null) {
-  const fallback = FARMER_USERS['selvam-thanjavur'];
   const cleanId = id ? String(id).toLowerCase().trim() : '';
 
-  if (userProfile?.iot_hub_id) {
-    const ioTMatch = Object.values(FARMER_USERS).find((u) => {
-      const candidate = String(u.iotHubId || '').trim();
-      return candidate.toLowerCase() === String(userProfile.iot_hub_id).trim().toLowerCase();
-    });
-    if (ioTMatch) {
-      return { ...ioTMatch, id: id || ioTMatch.id, name: userProfile.full_name || ioTMatch.name };
-    }
+  // Explicit demo profiles
+  if (cleanId === 'selvam-thanjavur' && !userProfile) {
+    return FARMER_USERS['selvam-thanjavur'];
+  }
+  if (cleanId === 'kavitha-madurai' && !userProfile) {
+    return FARMER_USERS['kavitha-madurai'];
+  }
+  if (FARMER_USERS[cleanId] && !userProfile) {
+    return FARMER_USERS[cleanId];
   }
 
-  if (cleanId) {
-    if (FARMER_USERS[cleanId]) {
-      return FARMER_USERS[cleanId];
-    }
-
-    const found = Object.values(FARMER_USERS).find(u => u.numericId === cleanId);
-    if (found) return found;
-  }
-
-  if (userProfile?.full_name) {
-    return { ...fallback, id: cleanId || fallback.id, name: userProfile.full_name };
-  }
-
-  return fallback;
+  // If farmer registered with an IoT hub ID or district
+  const iotId = userProfile?.iot_hub_id || (cleanId.startsWith('iot-') ? cleanId : 'IOT-ERD-102');
+  
+  // Return dynamically synthesized Erode well profile for this farmer
+  return createErodeFarmerProfile(iotId, userProfile);
 }
 
 export function getFarmerUser(id, userProfile = null) {

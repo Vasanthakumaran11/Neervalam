@@ -14,7 +14,8 @@ import {
   Navigation,
   Building2,
   MapPinned,
-  ArrowRight
+  ArrowRight,
+  ShieldAlert
 } from 'lucide-react';
 import { searchTamilNaduPlaces } from '../services/geocodingService';
 
@@ -522,6 +523,26 @@ export default function Navbar({
             >
               <Sparkles size={15} color="#38bdf8" />
               <span>AI Roadmap</span>
+            </button>
+            <button 
+              className={`btn btn-tab ${activeTab === 'drought' ? 'active' : ''}`}
+              onClick={() => setActiveTab('drought')}
+              title="AI Drought Early Warning & CGWB Action Hub"
+              style={{ position: 'relative' }}
+            >
+              <ShieldAlert size={15} color="#f59e0b" />
+              <span>AI Drought Alert</span>
+              <span style={{
+                fontSize: '0.62rem',
+                fontWeight: '800',
+                background: '#ef4444',
+                color: '#fff',
+                padding: '1px 5px',
+                borderRadius: '6px',
+                marginLeft: '0.2rem'
+              }}>
+                CGWB
+              </span>
             </button>
           </div>
 

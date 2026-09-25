@@ -1,0 +1,52 @@
+{
+  "feature_cols": [
+    "wl_t_mbgl",
+    "month_t",
+    "month_sin_t",
+    "month_cos_t",
+    "water_year_t",
+    "gap_days",
+    "hist_n_obs",
+    "hist_mean_mbgl",
+    "hist_min_mbgl",
+    "hist_max_mbgl",
+    "wl_t_minus_hist_mean_m",
+    "transmissivity_m2_day",
+    "storativity_s",
+    "weathered_zone_thickness_m",
+    "specific_yield_pct",
+    "rain_7d_mm",
+    "rain_30d_mm",
+    "rain_90d_mm",
+    "et0_30d_mm",
+    "temp_mean_30d_c",
+    "humidity_mean_30d_pct",
+    "well_type_code",
+    "block_code"
+  ],
+  "target_col": "target_wl_next_mbgl",
+  "metrics": {
+    "Persistence Baseline": {
+      "MAE": 6.131,
+      "RMSE": 14.341,
+      "R2": 0.489
+    },
+    "Ridge Regression": {
+      "MAE": 5.853,
+      "RMSE": 12.591,
+      "R2": 0.606
+    },
+    "Random Forest Regressor": {
+      "MAE": 6.223,
+      "RMSE": 14.658,
+      "R2": 0.466
+    },
+    "LightGBM Regressor": {
+      "MAE": 6.285,
+      "RMSE": 16.108,
+      "R2": 0.355
+    }
+  },
+  "persistence_mae_benchmark": 2.13,
+  "winning_model": "Random Forest Regressor"
+}
