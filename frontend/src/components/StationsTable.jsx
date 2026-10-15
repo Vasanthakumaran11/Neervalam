@@ -18,7 +18,8 @@ export default function StationsTable({
   districts, 
   onSelectStation, 
   searchQuery, 
-  setSearchQuery 
+  setSearchQuery,
+  theme = 'dark'
 }) {
   const [districtFilter, setDistrictFilter] = useState('ALL');
   const [depthFilter, setDepthFilter] = useState('ALL');
@@ -199,7 +200,7 @@ export default function StationsTable({
         justifyContent: 'space-between', 
         flexWrap: 'wrap', 
         gap: '0.75rem',
-        background: 'rgba(15, 23, 42, 0.5)',
+        background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.5)',
         padding: '0.75rem 1rem',
         borderRadius: '12px',
         border: '1px solid var(--border-subtle)'
@@ -216,8 +217,8 @@ export default function StationsTable({
               style={{
                 padding: '0.35rem 0.65rem',
                 borderRadius: '8px',
-                border: '1px solid var(--border-subtle)',
-                background: '#1e293b',
+                border: '1px solid var(--input-border)',
+                background: 'var(--input-bg)',
                 color: 'var(--text-primary)',
                 fontSize: '0.8rem',
                 outline: 'none'
@@ -239,8 +240,8 @@ export default function StationsTable({
               style={{
                 padding: '0.35rem 0.65rem',
                 borderRadius: '8px',
-                border: '1px solid var(--border-subtle)',
-                background: '#1e293b',
+                border: '1px solid var(--input-border)',
+                background: 'var(--input-bg)',
                 color: 'var(--text-primary)',
                 fontSize: '0.8rem',
                 outline: 'none'
@@ -264,8 +265,8 @@ export default function StationsTable({
               style={{
                 padding: '0.35rem 0.65rem',
                 borderRadius: '8px',
-                border: '1px solid var(--border-subtle)',
-                background: '#1e293b',
+                border: '1px solid var(--input-border)',
+                background: 'var(--input-bg)',
                 color: 'var(--text-primary)',
                 fontSize: '0.8rem',
                 outline: 'none'
@@ -314,7 +315,7 @@ export default function StationsTable({
       <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
           <thead>
-            <tr style={{ background: '#1e293b', color: '#94a3b8' }}>
+            <tr style={{ background: 'var(--table-header-bg)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
               <th onClick={() => handleSort('id')} style={{ padding: '0.75rem 1rem', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   ID <ArrowUpDown size={12} />
@@ -367,18 +368,18 @@ export default function StationsTable({
                 <tr 
                   key={well.id}
                   style={{ 
-                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                    background: index % 2 === 0 ? 'transparent' : 'rgba(30, 41, 59, 0.25)',
+                    borderBottom: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255, 255, 255, 0.05)',
+                    background: index % 2 === 0 ? 'transparent' : (theme === 'light' ? 'var(--table-row-alt)' : 'rgba(30, 41, 59, 0.25)'),
                     transition: 'background var(--transition-fast)'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(14, 165, 233, 0.08)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : 'rgba(30, 41, 59, 0.25)'}
+                  onMouseEnter={(e) => e.currentTarget.style.background = (theme === 'light' ? 'var(--table-row-hover)' : 'rgba(14, 165, 233, 0.08)')}
+                  onMouseLeave={(e) => e.currentTarget.style.background = index % 2 === 0 ? 'transparent' : (theme === 'light' ? 'var(--table-row-alt)' : 'rgba(30, 41, 59, 0.25)')}
                 >
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)', fontWeight: '600' }}>
                     #{well.id}
                   </td>
                   <td style={{ padding: '0.75rem 1rem' }}>
-                    <div style={{ fontWeight: '700', color: '#f8fafc' }}>{well.location}</div>
+                    <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{well.location}</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{well.wellType}</div>
                   </td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--cyan-primary)', fontWeight: '600' }}>
@@ -399,7 +400,7 @@ export default function StationsTable({
                   <td style={{ padding: '0.75rem 0.85rem' }}>
                     {well.annualFluctuation !== null ? (
                       <span style={{ 
-                        color: hasRise ? '#34d399' : '#f87171', 
+                        color: hasRise ? (theme === 'light' ? '#16a34a' : '#34d399') : (theme === 'light' ? '#dc2626' : '#f87171'), 
                         fontWeight: '700', 
                         display: 'flex', 
                         alignItems: 'center', 
@@ -453,10 +454,11 @@ export default function StationsTable({
             style={{
               padding: '0.25rem 0.5rem',
               borderRadius: '6px',
-              border: '1px solid var(--border-subtle)',
-              background: '#1e293b',
+              border: '1px solid var(--input-border)',
+              background: 'var(--input-bg)',
               color: 'var(--text-primary)',
-              fontSize: '0.8rem'
+              fontSize: '0.8rem',
+              outline: 'none'
             }}
           >
             <option value={25}>25 per page</option>

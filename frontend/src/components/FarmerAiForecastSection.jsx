@@ -14,9 +14,15 @@ import {
   Sprout
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000/api/ai';
+const API_BASE = '/api/ai';
 
-export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDepth = 14.5, initialPumpDepth = 24.0 }) {
+export default function FarmerAiForecastSection({ 
+  wellId = 'NVW001', 
+  initialDepth = 14.5, 
+  initialPumpDepth = 24.0,
+  theme = 'dark'
+}) {
+  const isLight = theme === 'light';
   // Scenario state
   const [currentDepth, setCurrentDepth] = useState(initialDepth);
   const [pumpDepth, setPumpDepth] = useState(initialPumpDepth);
@@ -109,7 +115,15 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
   const forecast = prediction?.forecast;
 
   return (
-    <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderRadius: '16px', border: '1px solid rgba(14, 165, 233, 0.25)', background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 47, 73, 0.7))' }}>
+    <div className="glass-card" style={{ 
+      padding: '1.5rem', 
+      marginBottom: '1.5rem', 
+      borderRadius: '16px', 
+      border: isLight ? '1px solid #bbf7d0' : '1px solid rgba(14, 165, 233, 0.25)', 
+      background: isLight 
+        ? 'linear-gradient(135deg, #ffffff, #f0fdf4)' 
+        : 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 47, 73, 0.7))' 
+    }}>
       
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.25rem' }}>
@@ -118,7 +132,7 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
             <Sparkles size={20} color="#ffffff" />
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               AI Groundwater Forecaster & Critical Pump Protection
               <span className="badge badge-cyan" style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem' }}>Physics-Informed ML</span>
             </h3>
@@ -134,8 +148,8 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
             display: 'flex', alignItems: 'center', gap: '0.4rem',
             padding: '0.4rem 0.85rem', borderRadius: '999px',
             fontSize: '0.78rem', fontWeight: '700',
-            background: alert.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.2)' : alert.severity === 'WARNING' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-            color: alert.severity === 'CRITICAL' ? '#f87171' : alert.severity === 'WARNING' ? '#fbbf24' : '#34d399',
+            background: alert.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.15)' : alert.severity === 'WARNING' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            color: alert.severity === 'CRITICAL' ? (isLight ? '#dc2626' : '#f87171') : alert.severity === 'WARNING' ? (isLight ? '#d97706' : '#fbbf24') : (isLight ? '#16a34a' : '#34d399'),
             border: `1px solid ${alert.severity === 'CRITICAL' ? '#ef4444' : alert.severity === 'WARNING' ? '#f59e0b' : '#10b981'}`
           }}>
             {alert.severity === 'CRITICAL' ? <ShieldAlert size={15} /> : alert.severity === 'WARNING' ? <AlertTriangle size={15} /> : <CheckCircle2 size={15} />}
@@ -148,20 +162,20 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
       {alert && alert.severity !== 'NORMAL' && (
         <div style={{
           padding: '1rem 1.25rem', borderRadius: '12px', marginBottom: '1.25rem',
-          background: alert.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-          border: `1px solid ${alert.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`,
+          background: alert.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+          border: `1px solid ${alert.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
           display: 'flex', alignItems: 'flex-start', gap: '0.75rem'
         }}>
-          <AlertTriangle size={22} color={alert.severity === 'CRITICAL' ? '#f87171' : '#fbbf24'} style={{ flexShrink: 0, marginTop: '2px' }} />
+          <AlertTriangle size={22} color={alert.severity === 'CRITICAL' ? '#ef4444' : '#f59e0b'} style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
-            <div style={{ fontWeight: '800', fontSize: '0.9rem', color: alert.severity === 'CRITICAL' ? '#fca5a5' : '#fde68a', marginBottom: '0.25rem' }}>
+            <div style={{ fontWeight: '800', fontSize: '0.9rem', color: alert.severity === 'CRITICAL' ? (isLight ? '#991b1b' : '#fca5a5') : (isLight ? '#92400e' : '#fde68a'), marginBottom: '0.25rem' }}>
               {alert.message}
             </div>
-            <div style={{ fontSize: '0.8rem', color: '#e2e8f0', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '0.8rem', color: isLight ? '#334155' : '#e2e8f0', lineHeight: 1.4 }}>
               <strong>Recommended Action:</strong> {alert.recommended_action}
             </div>
             {alert.days_to_pump_failure <= 90 && (
-              <div style={{ marginTop: '0.4rem', fontSize: '0.76rem', color: '#94a3b8' }}>
+              <div style={{ marginTop: '0.4rem', fontSize: '0.76rem', color: isLight ? '#475569' : '#94a3b8' }}>
                 Estimated pump air-suction event in <strong>{alert.days_to_pump_failure} days</strong> under current pumping schedule.
               </div>
             )}
@@ -173,8 +187,8 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: '1.25rem' }}>
         
         {/* Left Column: Interactive Scenario Sliders */}
-        <div style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: '700', color: '#38bdf8' }}>
+        <div style={{ background: isLight ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.6)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: '700', color: isLight ? '#0284c7' : '#38bdf8' }}>
             <Sliders size={16} /> Interactive Well & Crop Controls
           </div>
 
@@ -182,7 +196,7 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '0.35rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Current Water Depth:</span>
-              <span style={{ fontWeight: '700', color: '#38bdf8' }}>{currentDepth} m bgl</span>
+              <span style={{ fontWeight: '700', color: isLight ? '#0284c7' : '#38bdf8' }}>{currentDepth} m bgl</span>
             </div>
             <input
               type="range" min="5" max="35" step="0.5"
@@ -201,7 +215,7 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '0.35rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Pump Intake Depth:</span>
-              <span style={{ fontWeight: '700', color: '#f59e0b' }}>{pumpDepth} m bgl</span>
+              <span style={{ fontWeight: '700', color: isLight ? '#d97706' : '#f59e0b' }}>{pumpDepth} m bgl</span>
             </div>
             <input
               type="range" min="12" max="45" step="1"
@@ -225,9 +239,9 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
                   style={{
                     padding: '0.4rem 0.2rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '600',
                     cursor: 'pointer', transition: 'all 0.2s',
-                    background: crop === c ? 'rgba(14, 165, 233, 0.3)' : 'rgba(255, 255, 255, 0.05)',
-                    color: crop === c ? '#38bdf8' : 'var(--text-secondary)',
-                    border: `1px solid ${crop === c ? '#0ea5e9' : 'rgba(255, 255, 255, 0.08)'}`
+                    background: crop === c ? (isLight ? 'rgba(14, 165, 233, 0.15)' : 'rgba(14, 165, 233, 0.3)') : (isLight ? 'var(--bg-card)' : 'rgba(255, 255, 255, 0.05)'),
+                    color: crop === c ? (isLight ? '#0284c7' : '#38bdf8') : 'var(--text-secondary)',
+                    border: `1px solid ${crop === c ? '#0ea5e9' : 'var(--border-subtle)'}`
                   }}
                 >
                   {c}
@@ -248,9 +262,9 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
                 style={{
                   padding: '0.45rem', borderRadius: '8px', fontSize: '0.76rem', fontWeight: '700',
                   cursor: 'pointer',
-                  background: irrigation === 'Flood' ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  color: irrigation === 'Flood' ? '#38bdf8' : 'var(--text-muted)',
-                  border: `1px solid ${irrigation === 'Flood' ? '#38bdf8' : 'rgba(255, 255, 255, 0.08)'}`
+                  background: irrigation === 'Flood' ? (isLight ? 'rgba(56, 189, 248, 0.15)' : 'rgba(56, 189, 248, 0.25)') : (isLight ? 'var(--bg-card)' : 'rgba(255, 255, 255, 0.05)'),
+                  color: irrigation === 'Flood' ? (isLight ? '#0284c7' : '#38bdf8') : 'var(--text-muted)',
+                  border: `1px solid ${irrigation === 'Flood' ? '#38bdf8' : 'var(--border-subtle)'}`
                 }}
               >
                 🌊 Flood (Standard)
@@ -261,9 +275,9 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
                 style={{
                   padding: '0.45rem', borderRadius: '8px', fontSize: '0.76rem', fontWeight: '700',
                   cursor: 'pointer',
-                  background: irrigation === 'Drip' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  color: irrigation === 'Drip' ? '#34d399' : 'var(--text-muted)',
-                  border: `1px solid ${irrigation === 'Drip' ? '#10b981' : 'rgba(255, 255, 255, 0.08)'}`
+                  background: irrigation === 'Drip' ? (isLight ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.25)') : (isLight ? 'var(--bg-card)' : 'rgba(255, 255, 255, 0.05)'),
+                  color: irrigation === 'Drip' ? (isLight ? '#15803d' : '#34d399') : 'var(--text-muted)',
+                  border: `1px solid ${irrigation === 'Drip' ? '#10b981' : 'var(--border-subtle)'}`
                 }}
               >
                 💧 Drip (-40% Water)
@@ -285,9 +299,9 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
                   style={{
                     padding: '0.4rem 0.2rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '600',
                     cursor: 'pointer',
-                    background: rainScenario === s ? 'rgba(245, 158, 11, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                    color: rainScenario === s ? '#fbbf24' : 'var(--text-muted)',
-                    border: `1px solid ${rainScenario === s ? '#f59e0b' : 'rgba(255, 255, 255, 0.08)'}`
+                    background: rainScenario === s ? (isLight ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.25)') : (isLight ? 'var(--bg-card)' : 'rgba(255, 255, 255, 0.05)'),
+                    color: rainScenario === s ? (isLight ? '#d97706' : '#fbbf24') : 'var(--text-muted)',
+                    border: `1px solid ${rainScenario === s ? '#f59e0b' : 'var(--border-subtle)'}`
                   }}
                 >
                   {s}
@@ -304,25 +318,25 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
           {/* 30, 60, 90 Day Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
             
-            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center' }}>
+            <div style={{ background: isLight ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Day 30 Forecast</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: (forecast?.day_30_mbgl || 0) >= pumpDepth ? '#f87171' : '#38bdf8' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: (forecast?.day_30_mbgl || 0) >= pumpDepth ? '#dc2626' : (isLight ? '#0284c7' : '#38bdf8') }}>
                 {forecast ? `${forecast.day_30_mbgl}m` : '--'}
               </div>
               <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>below ground</div>
             </div>
 
-            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center' }}>
+            <div style={{ background: isLight ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Day 60 Forecast</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: (forecast?.day_60_mbgl || 0) >= pumpDepth ? '#f87171' : '#fbbf24' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: (forecast?.day_60_mbgl || 0) >= pumpDepth ? '#dc2626' : (isLight ? '#d97706' : '#fbbf24') }}>
                 {forecast ? `${forecast.day_60_mbgl}m` : '--'}
               </div>
               <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>below ground</div>
             </div>
 
-            <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '0.85rem', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center' }}>
+            <div style={{ background: isLight ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-subtle)', textAlign: 'center' }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Day 90 Forecast</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: (forecast?.day_90_mbgl || 0) >= pumpDepth ? '#f87171' : '#34d399' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: (forecast?.day_90_mbgl || 0) >= pumpDepth ? '#dc2626' : (isLight ? '#16a34a' : '#34d399') }}>
                 {forecast ? `${forecast.day_90_mbgl}m` : '--'}
               </div>
               <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>below ground</div>
@@ -331,14 +345,14 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
           </div>
 
           {/* Visual Water Level Trajectory Bar */}
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ background: isLight ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', marginBottom: '0.6rem' }}>
-              <span>Well Column Head Projection:</span>
-              <span style={{ color: '#f59e0b' }}>Pump Limit: {pumpDepth}m</span>
+              <span style={{ color: 'var(--text-primary)' }}>Well Column Head Projection:</span>
+              <span style={{ color: isLight ? '#d97706' : '#f59e0b' }}>Pump Limit: {pumpDepth}m</span>
             </div>
 
             {/* Depth meter visualization */}
-            <div style={{ position: 'relative', height: '24px', background: 'rgba(255, 255, 255, 0.06)', borderRadius: '6px', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+            <div style={{ position: 'relative', height: '24px', background: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)', borderRadius: '6px', overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
               {/* Pump intake line marker */}
               <div
                 style={{
@@ -369,14 +383,14 @@ export default function FarmerAiForecastSection({ wellId = 'NVW001', initialDept
 
           {/* Drip Optimization Card */}
           {prediction?.drip_optimization && (
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.85rem 1rem', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(16, 185, 129, 0.1)', padding: '0.85rem 1rem', borderRadius: '10px', border: isLight ? '1px solid rgba(22, 163, 74, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Droplets size={20} color="#34d399" />
+                <Droplets size={20} color={isLight ? '#16a34a' : '#34d399'} />
                 <div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#34d399' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: '700', color: isLight ? '#15803d' : '#34d399' }}>
                     Water Conservation Opportunity
                   </div>
-                  <div style={{ fontSize: '0.74rem', color: '#cbd5e1' }}>
+                  <div style={{ fontSize: '0.74rem', color: isLight ? '#334155' : '#cbd5e1' }}>
                     Switch to Drip: saves <strong>{prediction.drip_optimization.head_saved_meters}m</strong> of water head, avoiding well failure.
                   </div>
                 </div>

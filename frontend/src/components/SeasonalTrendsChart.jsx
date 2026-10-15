@@ -38,7 +38,7 @@ ChartJS.register(
   Filler
 );
 
-export default function SeasonalTrendsChart({ stateStats }) {
+export default function SeasonalTrendsChart({ stateStats, theme = 'dark' }) {
   if (!stateStats) return null;
 
   const { seasonalAverages, depthDistribution, fluctuationStats, rainfallSummary2024 } = stateStats;
@@ -55,9 +55,9 @@ export default function SeasonalTrendsChart({ stateStats }) {
           seasonalAverages['November 2024'],
           seasonalAverages['January 2025']
         ],
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(14, 165, 233, 0.2)',
-        pointBackgroundColor: '#0ea5e9',
+        borderColor: theme === 'light' ? '#0284c7' : '#38bdf8',
+        backgroundColor: theme === 'light' ? 'rgba(2, 132, 199, 0.12)' : 'rgba(14, 165, 233, 0.2)',
+        pointBackgroundColor: theme === 'light' ? '#0284c7' : '#0ea5e9',
         pointBorderColor: '#ffffff',
         pointHoverRadius: 8,
         pointRadius: 6,
@@ -74,10 +74,10 @@ export default function SeasonalTrendsChart({ stateStats }) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#0f172a',
-        titleColor: '#f8fafc',
-        bodyColor: '#38bdf8',
-        borderColor: 'rgba(14, 165, 233, 0.4)',
+        backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
+        titleColor: theme === 'light' ? '#0f172a' : '#f8fafc',
+        bodyColor: theme === 'light' ? '#0284c7' : '#38bdf8',
+        borderColor: theme === 'light' ? '#cbd5e1' : 'rgba(14, 165, 233, 0.4)',
         borderWidth: 1,
         padding: 10,
         callbacks: {
@@ -91,14 +91,14 @@ export default function SeasonalTrendsChart({ stateStats }) {
         title: {
           display: true,
           text: 'Depth (m bgl) - [Inverted: Higher = Shallower Table]',
-          color: '#94a3b8'
+          color: theme === 'light' ? '#475569' : '#94a3b8'
         },
-        grid: { color: 'rgba(255, 255, 255, 0.06)' },
-        ticks: { color: '#94a3b8' }
+        grid: { color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: theme === 'light' ? '#475569' : '#94a3b8' }
       },
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.06)' },
-        ticks: { color: '#cbd5e1' }
+        grid: { color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: theme === 'light' ? '#334155' : '#cbd5e1' }
       }
     }
   };
@@ -122,7 +122,7 @@ export default function SeasonalTrendsChart({ stateStats }) {
           '#f97316', // orange
           '#ef4444'  // red
         ],
-        borderColor: '#0f172a',
+        borderColor: theme === 'light' ? '#ffffff' : '#0f172a',
         borderWidth: 2
       }
     ]
@@ -135,16 +135,16 @@ export default function SeasonalTrendsChart({ stateStats }) {
       legend: {
         position: 'right',
         labels: {
-          color: '#cbd5e1',
+          color: theme === 'light' ? '#334155' : '#cbd5e1',
           font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '500' },
           boxWidth: 10
         }
       },
       tooltip: {
-        backgroundColor: '#0f172a',
-        titleColor: '#f8fafc',
-        bodyColor: '#38bdf8',
-        borderColor: 'rgba(14, 165, 233, 0.4)',
+        backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
+        titleColor: theme === 'light' ? '#0f172a' : '#f8fafc',
+        bodyColor: theme === 'light' ? '#0284c7' : '#38bdf8',
+        borderColor: theme === 'light' ? '#cbd5e1' : 'rgba(14, 165, 233, 0.4)',
         borderWidth: 1,
         padding: 10
       }
@@ -162,13 +162,13 @@ export default function SeasonalTrendsChart({ stateStats }) {
       {
         label: '% Wells Recording Rise',
         data: [60.58, 78.27, 86.89],
-        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+        backgroundColor: theme === 'light' ? 'rgba(22, 163, 74, 0.85)' : 'rgba(16, 185, 129, 0.85)',
         borderRadius: 6
       },
       {
         label: '% Wells Recording Fall',
         data: [39.42, 21.73, 13.11],
-        backgroundColor: 'rgba(239, 68, 68, 0.75)',
+        backgroundColor: theme === 'light' ? 'rgba(220, 38, 38, 0.8)' : 'rgba(239, 68, 68, 0.75)',
         borderRadius: 6
       }
     ]
@@ -181,15 +181,15 @@ export default function SeasonalTrendsChart({ stateStats }) {
       legend: {
         position: 'top',
         labels: {
-          color: '#cbd5e1',
+          color: theme === 'light' ? '#334155' : '#cbd5e1',
           font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: '600' }
         }
       },
       tooltip: {
-        backgroundColor: '#0f172a',
-        titleColor: '#f8fafc',
-        bodyColor: '#38bdf8',
-        borderColor: 'rgba(14, 165, 233, 0.4)',
+        backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
+        titleColor: theme === 'light' ? '#0f172a' : '#f8fafc',
+        bodyColor: theme === 'light' ? '#0284c7' : '#38bdf8',
+        borderColor: theme === 'light' ? '#cbd5e1' : 'rgba(14, 165, 233, 0.4)',
         borderWidth: 1,
         padding: 10
       }
@@ -200,14 +200,14 @@ export default function SeasonalTrendsChart({ stateStats }) {
         title: {
           display: true,
           text: 'Percentage of Monitored Wells (%)',
-          color: '#94a3b8'
+          color: theme === 'light' ? '#475569' : '#94a3b8'
         },
-        grid: { color: 'rgba(255, 255, 255, 0.06)' },
-        ticks: { color: '#94a3b8', callback: (v) => `${v}%` }
+        grid: { color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: theme === 'light' ? '#475569' : '#94a3b8', callback: (v) => `${v}%` }
       },
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.06)' },
-        ticks: { color: '#cbd5e1', font: { size: 10 } }
+        grid: { color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: theme === 'light' ? '#334155' : '#cbd5e1', font: { size: 10 } }
       }
     }
   };
@@ -326,33 +326,33 @@ export default function SeasonalTrendsChart({ stateStats }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
           
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>South West Monsoon (Jun-Sep)</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#38bdf8', margin: '0.2rem 0' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: theme === 'light' ? '#0284c7' : '#38bdf8', margin: '0.2rem 0' }}>
               {rainfallSummary2024.swmActual} mm
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Normal: {rainfallSummary2024.swmNormal} mm · <strong style={{ color: '#34d399' }}>{rainfallSummary2024.swmDeparture}</strong>
+              Normal: {rainfallSummary2024.swmNormal} mm · <strong style={{ color: theme === 'light' ? '#16a34a' : '#34d399' }}>{rainfallSummary2024.swmDeparture}</strong>
             </div>
           </div>
 
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>North East Monsoon (Oct-Dec)</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#34d399', margin: '0.2rem 0' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: theme === 'light' ? '#16a34a' : '#34d399', margin: '0.2rem 0' }}>
               {rainfallSummary2024.nemActual} mm
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Normal: {rainfallSummary2024.nemNormal} mm · <strong style={{ color: '#34d399' }}>{rainfallSummary2024.nemDeparture}</strong>
+              Normal: {rainfallSummary2024.nemNormal} mm · <strong style={{ color: theme === 'light' ? '#16a34a' : '#34d399' }}>{rainfallSummary2024.nemDeparture}</strong>
             </div>
           </div>
 
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.7)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Annual Realized</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#a855f7', margin: '0.2rem 0' }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: '800', color: theme === 'light' ? '#7c3aed' : '#a855f7', margin: '0.2rem 0' }}>
               {rainfallSummary2024.annualActual} mm
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Normal: 921.4 mm · <strong style={{ color: '#c084fc' }}>{rainfallSummary2024.annualDeparture}</strong>
+              Normal: 921.4 mm · <strong style={{ color: theme === 'light' ? '#7c3aed' : '#c084fc' }}>{rainfallSummary2024.annualDeparture}</strong>
             </div>
           </div>
 

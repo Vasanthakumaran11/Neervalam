@@ -239,7 +239,7 @@ export default function Navbar({
                 padding: '0.6rem 2.4rem 0.6rem 2.4rem',
                 borderRadius: '10px',
                 border: '1px solid ' + (isOpen ? 'var(--cyan-primary)' : 'var(--border-subtle)'),
-                background: 'rgba(15, 23, 42, 0.75)',
+                background: theme === 'light' ? '#ffffff' : 'rgba(15, 23, 42, 0.75)',
                 color: 'var(--text-primary)',
                 fontSize: '0.85rem',
                 outline: 'none',
@@ -286,12 +286,12 @@ export default function Navbar({
                 top: 'calc(100% + 6px)',
                 left: 0,
                 right: 0,
-                background: 'rgba(15, 23, 42, 0.96)',
+                background: theme === 'light' ? '#ffffff' : 'rgba(15, 23, 42, 0.96)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
+                border: theme === 'light' ? '1px solid #cbd5e1' : '1px solid rgba(56, 189, 248, 0.3)',
                 borderRadius: '12px',
-                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.65)',
+                boxShadow: theme === 'light' ? '0 12px 32px rgba(0, 0, 0, 0.12)' : '0 16px 40px rgba(0, 0, 0, 0.65)',
                 maxHeight: '360px',
                 overflowY: 'auto',
                 zIndex: 9999,
@@ -299,7 +299,15 @@ export default function Navbar({
               }}
             >
               {/* Header Label */}
-              <div style={{ padding: '0.35rem 0.85rem 0.4rem', borderBottom: '1px solid rgba(255, 255, 255, 0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              <div style={{ 
+                padding: '0.35rem 0.85rem 0.4rem', 
+                borderBottom: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255, 255, 255, 0.07)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                fontSize: '0.72rem', 
+                color: 'var(--text-muted)' 
+              }}>
                 <span style={{ fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Live Location & Groundwater Finder
                 </span>
@@ -463,7 +471,16 @@ export default function Navbar({
               )}
 
               {/* Bottom Quick Action hint */}
-              <div style={{ padding: '0.45rem 0.85rem', borderTop: '1px solid rgba(255, 255, 255, 0.07)', fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(2, 6, 23, 0.4)' }}>
+              <div style={{ 
+                padding: '0.45rem 0.85rem', 
+                borderTop: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255, 255, 255, 0.07)', 
+                fontSize: '0.72rem', 
+                color: 'var(--text-secondary)', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                background: theme === 'light' ? '#f8fafc' : 'rgba(2, 6, 23, 0.4)' 
+              }}>
                 <span>Use ↑↓ to navigate · Enter to select</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--cyan-primary)' }}>
                   Fly to location <ArrowRight size={11} />
@@ -478,7 +495,7 @@ export default function Navbar({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
           <div style={{ 
             display: 'flex', 
-            background: 'rgba(30, 41, 59, 0.6)', 
+            background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(30, 41, 59, 0.6)', 
             padding: '0.25rem', 
             borderRadius: '10px',
             border: '1px solid var(--border-subtle)',
@@ -521,7 +538,7 @@ export default function Navbar({
               onClick={() => setActiveTab('roadmap')}
               title="Smart Groundwater AI & IoT Vision"
             >
-              <Sparkles size={15} color="#38bdf8" />
+              <Sparkles size={15} color={theme === 'light' ? '#0284c7' : '#38bdf8'} />
               <span>AI Roadmap</span>
             </button>
             <button 
@@ -530,7 +547,7 @@ export default function Navbar({
               title="AI Drought Early Warning & CGWB Action Hub"
               style={{ position: 'relative' }}
             >
-              <ShieldAlert size={15} color="#f59e0b" />
+              <ShieldAlert size={15} color={theme === 'light' ? '#d97706' : '#f59e0b'} />
               <span>AI Drought Alert</span>
               <span style={{
                 fontSize: '0.62rem',
@@ -552,7 +569,7 @@ export default function Navbar({
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             style={{ padding: '0.55rem', borderRadius: '10px' }}
           >
-            {theme === 'dark' ? <Sun size={17} color="#f59e0b" /> : <Moon size={17} color="#0ea5e9" />}
+            {theme === 'dark' ? <Sun size={17} color="#f59e0b" /> : <Moon size={17} color="#0284c7" />}
           </button>
         </div>
       </div>

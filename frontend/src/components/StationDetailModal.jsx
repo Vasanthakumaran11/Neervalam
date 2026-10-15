@@ -41,7 +41,7 @@ ChartJS.register(
   Filler
 );
 
-export default function StationDetailModal({ station, districtInfo, onClose }) {
+export default function StationDetailModal({ station, districtInfo, onClose, theme = 'dark' }) {
   if (!station) return null;
 
   const obs = station.observations;
@@ -68,9 +68,9 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
       {
         label: `${station.location} (m bgl)`,
         data: values,
-        borderColor: '#0ea5e9',
-        backgroundColor: 'rgba(14, 165, 233, 0.15)',
-        pointBackgroundColor: '#38bdf8',
+        borderColor: theme === 'light' ? '#0284c7' : '#0ea5e9',
+        backgroundColor: theme === 'light' ? 'rgba(2, 132, 199, 0.12)' : 'rgba(14, 165, 233, 0.15)',
+        pointBackgroundColor: theme === 'light' ? '#0284c7' : '#38bdf8',
         pointBorderColor: '#ffffff',
         pointHoverRadius: 8,
         pointRadius: 6,
@@ -81,11 +81,11 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
       ...(districtInfo ? [{
         label: `${districtInfo.name} District Avg (m bgl)`,
         data: districtAvgValues,
-        borderColor: 'rgba(255, 255, 255, 0.35)',
+        borderColor: theme === 'light' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.35)',
         backgroundColor: 'transparent',
         borderDash: [5, 5],
         pointRadius: 4,
-        pointBackgroundColor: 'rgba(255, 255, 255, 0.6)',
+        pointBackgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.6)',
         borderWidth: 2,
         tension: 0.2
       }] : [])
@@ -99,17 +99,17 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
       legend: {
         position: 'top',
         labels: {
-          color: '#cbd5e1',
+          color: theme === 'light' ? '#334155' : '#cbd5e1',
           font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' },
           usePointStyle: true,
           boxWidth: 8
         }
       },
       tooltip: {
-        backgroundColor: '#0f172a',
-        titleColor: '#f8fafc',
-        bodyColor: '#38bdf8',
-        borderColor: 'rgba(14, 165, 233, 0.4)',
+        backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
+        titleColor: theme === 'light' ? '#0f172a' : '#f8fafc',
+        bodyColor: theme === 'light' ? '#0284c7' : '#38bdf8',
+        borderColor: theme === 'light' ? '#cbd5e1' : 'rgba(14, 165, 233, 0.4)',
         borderWidth: 1,
         padding: 10,
         callbacks: {
@@ -126,23 +126,23 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
         title: {
           display: true,
           text: 'Depth to Water Table (m bgl) - Inverted Scale',
-          color: '#94a3b8',
+          color: theme === 'light' ? '#475569' : '#94a3b8',
           font: { size: 11, weight: '600' }
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.06)'
+          color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
         },
         ticks: {
-          color: '#94a3b8',
+          color: theme === 'light' ? '#475569' : '#94a3b8',
           callback: (value) => `${value} m`
         }
       },
       x: {
         grid: {
-          color: 'rgba(255, 255, 255, 0.06)'
+          color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
         },
         ticks: {
-          color: '#cbd5e1',
+          color: theme === 'light' ? '#334155' : '#cbd5e1',
           font: { size: 11 }
         }
       }
@@ -173,11 +173,11 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
         {/* Modal Header */}
         <div style={{
           padding: '1.25rem 1.5rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+          borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'rgba(15, 23, 42, 0.95)'
+          background: theme === 'light' ? '#ffffff' : 'rgba(15, 23, 42, 0.95)'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.2rem' }}>
@@ -193,7 +193,7 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
                 </span>
               )}
             </div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '800' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-primary)' }}>
               {station.location}
             </h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
@@ -221,7 +221,7 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
           {/* Key Metrics Row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem' }}>
             
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Latest Depth (Jan 2025)</div>
               <div style={{ fontSize: '1.6rem', fontWeight: '800', color: station.color, display: 'flex', alignItems: 'baseline', gap: '0.3rem' }}>
                 {station.latestLevel !== null ? `${station.latestLevel}` : 'N/A'} <span style={{ fontSize: '0.9rem' }}>m bgl</span>
@@ -231,12 +231,12 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
               </div>
             </div>
 
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Pre-to-Post Fluctuation</div>
               <div style={{ 
                 fontSize: '1.6rem', 
                 fontWeight: '800', 
-                color: isRise ? 'var(--emerald-safe)' : 'var(--crimson-critical)',
+                color: isRise ? (theme === 'light' ? '#16a34a' : 'var(--emerald-safe)') : (theme === 'light' ? '#dc2626' : 'var(--crimson-critical)'),
                 display: 'flex', 
                 alignItems: 'center', 
                 gap: '0.3rem' 
@@ -244,14 +244,14 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
                 {isRise ? <ArrowUpRight size={22} /> : <ArrowDownRight size={22} />}
                 {netDelta !== null ? `${Math.abs(netDelta)}` : 'N/A'} <span style={{ fontSize: '0.9rem' }}>m</span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: isRise ? '#34d399' : '#f87171', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '0.72rem', color: isRise ? (theme === 'light' ? '#16a34a' : '#34d399') : (theme === 'light' ? '#dc2626' : '#f87171'), marginTop: '0.2rem' }}>
                 {isRise ? 'Water Table Rose (Recharge)' : 'Water Table Fell (Draft/Deficit)'}
               </div>
             </div>
 
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>District Baseline Comparison</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'baseline', gap: '0.3rem' }}>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'baseline', gap: '0.3rem' }}>
                 {districtInfo?.avgJan25 ? `${districtInfo.avgJan25}` : 'N/A'} <span style={{ fontSize: '0.9rem' }}>m avg</span>
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
@@ -263,9 +263,9 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
               </div>
             </div>
 
-            <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
+            <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(30, 41, 59, 0.6)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.3rem' }}>Hydrogeology Aquifer Type</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: '#38bdf8', marginTop: '0.3rem' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: '700', color: theme === 'light' ? '#0284c7' : '#38bdf8', marginTop: '0.3rem' }}>
                 Phreatic Aquifer
               </div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '0.4rem' }}>
@@ -277,7 +277,7 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
 
           {/* Hydrograph Chart */}
           <div style={{ 
-            background: 'rgba(15, 23, 42, 0.6)', 
+            background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.6)', 
             padding: '1.25rem', 
             borderRadius: '16px', 
             border: '1px solid var(--border-subtle)',
@@ -286,7 +286,7 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Activity size={18} color="var(--cyan-primary)" />
-                <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>Hydrograph: 2024–2025 Seasonal Dynamics</h3>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>Hydrograph: 2024–2025 Seasonal Dynamics</h3>
               </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 *Inverted Y-Axis: Higher curve represents higher water table (closer to ground)
@@ -306,7 +306,7 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
             <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ background: '#1e293b', color: '#94a3b8' }}>
+                  <tr style={{ background: 'var(--table-header-bg)', color: 'var(--text-secondary)' }}>
                     <th style={{ padding: '0.65rem 1rem' }}>Season / Month</th>
                     <th style={{ padding: '0.65rem 1rem' }}>Water Level (m bgl)</th>
                     <th style={{ padding: '0.65rem 1rem' }}>District Average</th>
@@ -314,25 +314,25 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr style={{ borderBottom: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '0.65rem 1rem', fontWeight: '600' }}>May 2024 (Pre-Monsoon)</td>
-                    <td style={{ padding: '0.65rem 1rem', color: '#f8fafc', fontWeight: '700' }}>{obs['2024-05'] !== null ? `${obs['2024-05']} m` : 'No Record'}</td>
+                    <td style={{ padding: '0.65rem 1rem', color: 'var(--text-primary)', fontWeight: '700' }}>{obs['2024-05'] !== null ? `${obs['2024-05']} m` : 'No Record'}</td>
                     <td style={{ padding: '0.65rem 1rem', color: 'var(--text-secondary)' }}>{districtInfo?.avgMay24 ? `${districtInfo.avgMay24} m` : '-'}</td>
                     <td style={{ padding: '0.65rem 1rem' }}>
                       <span className="badge badge-amber" style={{ fontSize: '0.68rem' }}>Pre-Monsoon Baseline</span>
                     </td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr style={{ borderBottom: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '0.65rem 1rem', fontWeight: '600' }}>August 2024 (SWM Season)</td>
-                    <td style={{ padding: '0.65rem 1rem', color: '#f8fafc', fontWeight: '700' }}>{obs['2024-08'] !== null ? `${obs['2024-08']} m` : 'No Record'}</td>
+                    <td style={{ padding: '0.65rem 1rem', color: 'var(--text-primary)', fontWeight: '700' }}>{obs['2024-08'] !== null ? `${obs['2024-08']} m` : 'No Record'}</td>
                     <td style={{ padding: '0.65rem 1rem', color: 'var(--text-secondary)' }}>{districtInfo?.avgAug24 ? `${districtInfo.avgAug24} m` : '-'}</td>
                     <td style={{ padding: '0.65rem 1rem' }}>
                       <span className="badge badge-cyan" style={{ fontSize: '0.68rem' }}>South-West Monsoon</span>
                     </td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr style={{ borderBottom: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '0.65rem 1rem', fontWeight: '600' }}>November 2024 (NEM Season)</td>
-                    <td style={{ padding: '0.65rem 1rem', color: '#f8fafc', fontWeight: '700' }}>{obs['2024-11'] !== null ? `${obs['2024-11']} m` : 'No Record'}</td>
+                    <td style={{ padding: '0.65rem 1rem', color: 'var(--text-primary)', fontWeight: '700' }}>{obs['2024-11'] !== null ? `${obs['2024-11']} m` : 'No Record'}</td>
                     <td style={{ padding: '0.65rem 1rem', color: 'var(--text-secondary)' }}>{districtInfo?.avgNov24 ? `${districtInfo.avgNov24} m` : '-'}</td>
                     <td style={{ padding: '0.65rem 1rem' }}>
                       <span className="badge badge-emerald" style={{ fontSize: '0.68rem' }}>North-East Monsoon</span>
@@ -340,7 +340,7 @@ export default function StationDetailModal({ station, districtInfo, onClose }) {
                   </tr>
                   <tr>
                     <td style={{ padding: '0.65rem 1rem', fontWeight: '600' }}>January 2025 (Post-Monsoon)</td>
-                    <td style={{ padding: '0.65rem 1rem', color: '#38bdf8', fontWeight: '700' }}>{obs['2025-01'] !== null ? `${obs['2025-01']} m` : 'No Record'}</td>
+                    <td style={{ padding: '0.65rem 1rem', color: 'var(--cyan-primary)', fontWeight: '700' }}>{obs['2025-01'] !== null ? `${obs['2025-01']} m` : 'No Record'}</td>
                     <td style={{ padding: '0.65rem 1rem', color: 'var(--text-secondary)' }}>{districtInfo?.avgJan25 ? `${districtInfo.avgJan25} m` : '-'}</td>
                     <td style={{ padding: '0.65rem 1rem' }}>
                       <span className="badge badge-emerald" style={{ fontSize: '0.68rem' }}>Post-Monsoon Peak</span>

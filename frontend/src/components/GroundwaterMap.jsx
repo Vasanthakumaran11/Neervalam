@@ -99,21 +99,24 @@ export default function GroundwaterMap({
   onSelectStation,
   searchQuery,
   searchedLocation,
-  setSearchedLocation
+  setSearchedLocation,
+  theme = 'dark'
 }) {
   const [mapTile, setMapTile] = useState('streets'); // 'streets' | 'satellite'
   const [selectedDepthBracket, setSelectedDepthBracket] = useState(null); // null by default - markers hidden initially
   const [mapCenter, setMapCenter] = useState([11.1271, 78.6569]);
   const [mapZoom, setMapZoom] = useState(7);
 
-  // Map Tile Layers
+  // Map Tile Layers - dynamically adapt streets layer to theme
   const tileUrls = {
-    streets: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    streets: theme === 'light'
+      ? 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+      : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
   };
 
   const tileAttributions = {
-    streets: '&copy; OpenStreetMap contributors',
+    streets: '&copy; OpenStreetMap contributors &copy; CARTO',
     satellite: '&copy; Esri &mdash; Earthstar Geographics'
   };
 
@@ -214,8 +217,8 @@ export default function GroundwaterMap({
             style={{
               padding: '0.45rem 0.85rem',
               borderRadius: '8px',
-              border: '1px solid var(--border-subtle)',
-              background: '#1e293b',
+              border: '1px solid var(--input-border)',
+              background: 'var(--input-bg)',
               color: 'var(--text-primary)',
               fontSize: '0.85rem',
               outline: 'none',
@@ -231,7 +234,7 @@ export default function GroundwaterMap({
           </select>
 
           {/* Map Layer Switcher */}
-          <div style={{ display: 'flex', background: '#1e293b', padding: '0.2rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', background: theme === 'light' ? 'var(--bg-secondary)' : '#1e293b', padding: '0.2rem', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
             <button 
               className={`btn btn-tab ${mapTile === 'streets' ? 'active' : ''}`}
               style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
@@ -274,8 +277,8 @@ export default function GroundwaterMap({
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0.65rem 1rem',
-          background: 'linear-gradient(90deg, rgba(14, 165, 233, 0.22) 0%, rgba(56, 189, 248, 0.08) 100%)',
-          border: '1px solid rgba(56, 189, 248, 0.35)',
+          background: theme === 'light' ? 'linear-gradient(90deg, #e0f2fe 0%, #f0fdf4 100%)' : 'linear-gradient(90deg, rgba(14, 165, 233, 0.22) 0%, rgba(56, 189, 248, 0.08) 100%)',
+          border: theme === 'light' ? '1px solid #bae6fd' : '1px solid rgba(56, 189, 248, 0.35)',
           borderRadius: '10px',
           fontSize: '0.82rem',
           flexWrap: 'wrap',
@@ -284,7 +287,7 @@ export default function GroundwaterMap({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             <MapPinned size={18} color="var(--cyan-primary)" />
-            <span>
+            <span style={{ color: 'var(--text-primary)' }}>
               <strong>Pinpointed Location:</strong> {searchedLocation.name} {searchedLocation.displayName ? `· ${searchedLocation.displayName}` : ''}
             </span>
             {nearestWellToSearch && (
@@ -306,7 +309,7 @@ export default function GroundwaterMap({
             </button>
             <button
               className="btn btn-secondary"
-              style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', color: '#f87171' }}
+              style={{ padding: '0.25rem 0.65rem', fontSize: '0.75rem', color: '#ef4444' }}
               onClick={() => setSearchedLocation && setSearchedLocation(null)}
             >
               ✕ Clear Location Pin
@@ -316,7 +319,7 @@ export default function GroundwaterMap({
       )}
 
       {/* Depth Category Quick Filter Badges */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.5rem 0.85rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.8rem', background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.4)', padding: '0.5rem 0.85rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
         <span style={{ color: 'var(--text-muted)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
           <Filter size={14} /> Click Category to View Wells:
         </span>
@@ -533,7 +536,7 @@ export default function GroundwaterMap({
                   <div style={{ minWidth: '220px', padding: '0.25rem' }}>
                     
                     {/* Header */}
-                    <div style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.4rem', marginBottom: '0.5rem' }}>
+                    <div style={{ borderBottom: theme === 'light' ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.4rem', marginBottom: '0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                         <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--cyan-primary)', fontWeight: '700' }}>
                           {well.district}
@@ -542,7 +545,7 @@ export default function GroundwaterMap({
                           ID: #{well.id}
                         </span>
                       </div>
-                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: '#f8fafc', margin: '0.15rem 0' }}>
+                      <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0.15rem 0' }}>
                         {well.location}
                       </h4>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
@@ -552,10 +555,10 @@ export default function GroundwaterMap({
 
                     {/* Latest Water Level Card */}
                     <div style={{ 
-                      background: 'rgba(15, 23, 42, 0.8)', 
+                      background: theme === 'light' ? '#f8fafc' : 'rgba(15, 23, 42, 0.8)', 
                       padding: '0.5rem', 
                       borderRadius: '8px', 
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      border: '1px solid var(--border-subtle)',
                       marginBottom: '0.5rem',
                       display: 'flex',
                       alignItems: 'center',
@@ -573,7 +576,7 @@ export default function GroundwaterMap({
                         <div style={{ 
                           fontSize: '0.85rem', 
                           fontWeight: '700', 
-                          color: hasRise ? '#34d399' : '#f87171',
+                          color: hasRise ? (theme === 'light' ? '#16a34a' : '#34d399') : (theme === 'light' ? '#dc2626' : '#f87171'),
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'flex-end',
@@ -594,21 +597,21 @@ export default function GroundwaterMap({
                       textAlign: 'center',
                       marginBottom: '0.6rem'
                     }}>
-                      <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
+                      <div style={{ background: theme === 'light' ? '#f1f5f9' : 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
                         <div style={{ color: 'var(--text-muted)' }}>May-24</div>
-                        <div style={{ fontWeight: '600', color: '#f8fafc' }}>{obs['2024-05'] ?? '-'}m</div>
+                        <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{obs['2024-05'] ?? '-'}m</div>
                       </div>
-                      <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
+                      <div style={{ background: theme === 'light' ? '#f1f5f9' : 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
                         <div style={{ color: 'var(--text-muted)' }}>Aug-24</div>
-                        <div style={{ fontWeight: '600', color: '#f8fafc' }}>{obs['2024-08'] ?? '-'}m</div>
+                        <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{obs['2024-08'] ?? '-'}m</div>
                       </div>
-                      <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
+                      <div style={{ background: theme === 'light' ? '#f1f5f9' : 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
                         <div style={{ color: 'var(--text-muted)' }}>Nov-24</div>
-                        <div style={{ fontWeight: '600', color: '#f8fafc' }}>{obs['2024-11'] ?? '-'}m</div>
+                        <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{obs['2024-11'] ?? '-'}m</div>
                       </div>
-                      <div style={{ background: 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
+                      <div style={{ background: theme === 'light' ? '#f1f5f9' : 'rgba(30, 41, 59, 0.6)', padding: '0.25rem 0.15rem', borderRadius: '4px' }}>
                         <div style={{ color: 'var(--text-muted)' }}>Jan-25</div>
-                        <div style={{ fontWeight: '600', color: '#38bdf8' }}>{obs['2025-01'] ?? '-'}m</div>
+                        <div style={{ fontWeight: '600', color: 'var(--cyan-primary)' }}>{obs['2025-01'] ?? '-'}m</div>
                       </div>
                     </div>
 
@@ -649,12 +652,12 @@ export default function GroundwaterMap({
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 1000,
-            background: 'rgba(15, 23, 42, 0.9)',
+            background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.9)',
             backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(14, 165, 233, 0.4)',
+            border: theme === 'light' ? '1px solid #bae6fd' : '1px solid rgba(14, 165, 233, 0.4)',
             borderRadius: '14px',
             padding: '1rem 1.5rem',
-            boxShadow: 'var(--shadow-lg), 0 0 20px rgba(14, 165, 233, 0.25)',
+            boxShadow: theme === 'light' ? '0 10px 30px rgba(0, 0, 0, 0.08)' : 'var(--shadow-lg), 0 0 20px rgba(14, 165, 233, 0.25)',
             textAlign: 'center',
             maxWidth: '480px',
             width: '90%',
@@ -663,7 +666,7 @@ export default function GroundwaterMap({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
               <Sparkles size={16} color="var(--cyan-primary)" />
-              <span style={{ fontSize: '0.92rem', fontWeight: '700', color: '#f8fafc' }}>
+              <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 Map View Ready · Markings Hidden by Default
               </span>
             </div>
@@ -679,14 +682,15 @@ export default function GroundwaterMap({
           bottom: '16px',
           right: '16px',
           zIndex: 1000,
-          background: 'rgba(15, 23, 42, 0.85)',
+          background: theme === 'light' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.85)',
           backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '10px',
           padding: '0.65rem 0.85rem',
           fontSize: '0.72rem',
           boxShadow: 'var(--shadow-md)',
-          maxWidth: '200px'
+          maxWidth: '200px',
+          color: 'var(--text-primary)'
         }}>
           <div style={{ fontWeight: '700', marginBottom: '0.4rem', color: 'var(--text-primary)' }}>
             Groundwater Depth (m bgl)

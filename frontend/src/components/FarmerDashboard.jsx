@@ -122,66 +122,69 @@ export default function FarmerDashboard({
     };
   }, [farmer]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false
-    },
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          color: '#cbd5e1',
-          font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
+  const chartOptions = useMemo(() => {
+    const isLight = theme === 'light';
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: isLight ? '#334155' : '#cbd5e1',
+            font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
+          }
+        },
+        tooltip: {
+          backgroundColor: isLight ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+          titleColor: isLight ? '#0f172a' : '#f8fafc',
+          bodyColor: isLight ? '#334155' : '#cbd5e1',
+          borderColor: isLight ? '#e2e8f0' : 'rgba(56, 189, 248, 0.3)',
+          borderWidth: 1,
+          padding: 10
         }
       },
-      tooltip: {
-        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-        titleColor: '#f8fafc',
-        bodyColor: '#cbd5e1',
-        borderColor: 'rgba(56, 189, 248, 0.3)',
-        borderWidth: 1,
-        padding: 10
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8' }
-      },
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        reverse: true, // Depth: deeper means lower water table
-        title: {
-          display: true,
-          text: 'Depth to Water Level (m bgl) [Inverted]',
-          color: '#0ea5e9',
-          font: { size: 11 }
+      scales: {
+        x: {
+          grid: { color: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: isLight ? '#475569' : '#94a3b8' }
         },
-        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#94a3b8' }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        min: 0,
-        max: 100,
-        title: {
+        y: {
+          type: 'linear',
           display: true,
-          text: 'Soil Moisture (%)',
-          color: '#10b981',
-          font: { size: 11 }
+          position: 'left',
+          reverse: true, // Depth: deeper means lower water table
+          title: {
+            display: true,
+            text: 'Depth to Water Level (m bgl) [Inverted]',
+            color: isLight ? '#0284c7' : '#0ea5e9',
+            font: { size: 11, weight: '600' }
+          },
+          grid: { color: isLight ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: isLight ? '#475569' : '#94a3b8' }
         },
-        grid: { drawOnChartArea: false },
-        ticks: { color: '#94a3b8' }
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          min: 0,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Soil Moisture (%)',
+            color: isLight ? '#15803d' : '#10b981',
+            font: { size: 11, weight: '600' }
+          },
+          grid: { drawOnChartArea: false },
+          ticks: { color: isLight ? '#475569' : '#94a3b8' }
+        }
       }
-    }
-  };
+    };
+  }, [theme]);
 
   const rec = farmer.mlWaterRecommendation;
   const well = farmer.wellDetails;
@@ -219,9 +222,9 @@ export default function FarmerDashboard({
 
         {/* Farmer profile summary & telemetry pulse */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(15, 23, 42, 0.6)', padding: '0.35rem 0.75rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.6)', padding: '0.35rem 0.75rem', borderRadius: '10px', border: '1px solid var(--border-subtle)' }}>
             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>Current Farmer:</span>
-            <span style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.85rem' }}>{displayName}</span>
+            <span style={{ color: theme === 'light' ? '#0284c7' : '#38bdf8', fontWeight: '700', fontSize: '0.85rem' }}>{displayName}</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: 'var(--emerald-safe)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.35rem 0.65rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.25)' }}>
@@ -235,7 +238,7 @@ export default function FarmerDashboard({
             style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
             title="Randomly switch to any of Erode's 63 CGWB well monitoring stations"
           >
-            <RefreshCw size={14} color="#38bdf8" />
+            <RefreshCw size={14} color="#0284c7" />
             <span>Switch Erode Well (IoT Live)</span>
           </button>
 
@@ -253,7 +256,9 @@ export default function FarmerDashboard({
       {/* Farmer Land & Farm Profile Summary Ribbon */}
       <div className="glass-card" style={{ 
         padding: '1.25rem 1.5rem', 
-        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%)',
+        background: theme === 'light' 
+          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%)'
+          : 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%)',
         border: '1px solid rgba(16, 185, 129, 0.25)',
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -264,10 +269,10 @@ export default function FarmerDashboard({
             {farmer.avatar}
           </div>
           <div>
-            <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f8fafc' }}>
+            <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
               {displayName}
             </div>
-            <div style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: '600' }}>
+            <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: '600' }}>
               {farmer.tamilName}
             </div>
             <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
@@ -298,7 +303,7 @@ export default function FarmerDashboard({
 
         <div style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '1rem' }}>
           <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Telemetry Gateway</div>
-          <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#38bdf8', marginTop: '0.2rem', fontFamily: 'monospace' }}>
+          <div style={{ fontSize: '0.95rem', fontWeight: '700', color: theme === 'light' ? '#0284c7' : '#38bdf8', marginTop: '0.2rem', fontFamily: 'monospace' }}>
             {farmer.iotHubId}
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
@@ -310,9 +315,13 @@ export default function FarmerDashboard({
       {/* HERO SECTION: Today's ML Smart Water Pouring Recommendation */}
       <div className="glass-card" style={{ 
         padding: '1.75rem', 
-        background: rec.action === 'NO_IRRIGATION_NEEDED' 
-          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%)' 
-          : 'linear-gradient(135deg, rgba(2, 132, 199, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%)',
+        background: theme === 'light'
+          ? (rec.action === 'NO_IRRIGATION_NEEDED'
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, #ffffff 100%)'
+              : 'linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, #ffffff 100%)')
+          : (rec.action === 'NO_IRRIGATION_NEEDED' 
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%)' 
+              : 'linear-gradient(135deg, rgba(2, 132, 199, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%)'),
         border: `1px solid ${rec.action === 'NO_IRRIGATION_NEEDED' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(14, 165, 233, 0.4)'}`,
         position: 'relative',
         overflow: 'hidden'
@@ -333,7 +342,7 @@ export default function FarmerDashboard({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <span className="badge" style={{ 
               background: rec.action === 'NO_IRRIGATION_NEEDED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(14, 165, 233, 0.2)',
-              color: rec.action === 'NO_IRRIGATION_NEEDED' ? '#34d399' : '#38bdf8',
+              color: rec.action === 'NO_IRRIGATION_NEEDED' ? (theme === 'light' ? '#15803d' : '#34d399') : (theme === 'light' ? '#0284c7' : '#38bdf8'),
               border: `1px solid ${rec.action === 'NO_IRRIGATION_NEEDED' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(14, 165, 233, 0.4)'}`,
               fontSize: '0.8rem',
               padding: '0.35rem 0.85rem'
@@ -361,11 +370,11 @@ export default function FarmerDashboard({
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
           
           {/* Box 1: Water to Pour */}
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ background: theme === 'light' ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Recommended Water to Pour
             </div>
-            <div style={{ fontSize: '2.4rem', fontWeight: '800', color: rec.litersToPour === 0 ? '#10b981' : '#38bdf8', lineHeight: '1.2', margin: '0.35rem 0' }}>
+            <div style={{ fontSize: '2.4rem', fontWeight: '800', color: rec.litersToPour === 0 ? (theme === 'light' ? '#16a34a' : '#10b981') : (theme === 'light' ? '#0284c7' : '#38bdf8'), lineHeight: '1.2', margin: '0.35rem 0' }}>
               {rec.litersToPour.toLocaleString()} <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Liters</span>
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
@@ -374,11 +383,11 @@ export default function FarmerDashboard({
           </div>
 
           {/* Box 2: Pump Runtime */}
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ background: theme === 'light' ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Optimal Pump Runtime
             </div>
-            <div style={{ fontSize: '2.4rem', fontWeight: '800', color: rec.recommendedPumpMinutes === 0 ? '#10b981' : '#f59e0b', lineHeight: '1.2', margin: '0.35rem 0' }}>
+            <div style={{ fontSize: '2.4rem', fontWeight: '800', color: rec.recommendedPumpMinutes === 0 ? (theme === 'light' ? '#16a34a' : '#10b981') : (theme === 'light' ? '#d97706' : '#f59e0b'), lineHeight: '1.2', margin: '0.35rem 0' }}>
               {rec.recommendedPumpMinutes} <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Minutes</span>
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
@@ -387,11 +396,11 @@ export default function FarmerDashboard({
           </div>
 
           {/* Box 3: Groundwater Conserved */}
-          <div style={{ background: 'rgba(15, 23, 42, 0.7)', padding: '1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ background: theme === 'light' ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.7)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border-subtle)' }}>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               Groundwater Conserved
             </div>
-            <div style={{ fontSize: '2.4rem', fontWeight: '800', color: '#10b981', lineHeight: '1.2', margin: '0.35rem 0' }}>
+            <div style={{ fontSize: '2.4rem', fontWeight: '800', color: theme === 'light' ? '#16a34a' : '#10b981', lineHeight: '1.2', margin: '0.35rem 0' }}>
               +{rec.groundwaterSavedLiters.toLocaleString()} <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Liters</span>
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
@@ -402,11 +411,11 @@ export default function FarmerDashboard({
         </div>
 
         {/* Rationale & Explanation Card */}
-        <div style={{ background: 'rgba(2, 6, 23, 0.6)', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(2, 6, 23, 0.6)', padding: '1rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
-            <Info size={18} color={rec.action === 'NO_IRRIGATION_NEEDED' ? '#34d399' : '#38bdf8'} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <Info size={18} color={rec.action === 'NO_IRRIGATION_NEEDED' ? '#16a34a' : '#0284c7'} style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <div style={{ fontSize: '0.92rem', fontWeight: '700', color: '#f8fafc', marginBottom: '0.25rem' }}>
+              <div style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
                 {rec.summaryMessage}
               </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
@@ -421,7 +430,7 @@ export default function FarmerDashboard({
           <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', background: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.4)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <RefreshCw size={16} color="var(--cyan-primary)" style={{ animation: 'spin 2s linear infinite' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: '#f8fafc' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)' }}>
                 Simulating Smart Automated Irrigation: <strong>{simulatedMinutes} Minutes Scheduled</strong> via Drip Line
               </span>
             </div>
@@ -437,6 +446,7 @@ export default function FarmerDashboard({
          wellId={farmer.id || 'NVW001'}
          initialDepth={Number(well.currentDepthBgl) || 12.8}
          initialPumpDepth={well.totalDepthMeters ? Math.round(well.totalDepthMeters * 0.7) : 24.0}
+         theme={theme}
        />
 
        {/* 4 In-Situ IoT Telemetry Cards Grid */}
@@ -462,7 +472,7 @@ export default function FarmerDashboard({
           </div>
 
           {/* Visual depth bar */}
-          <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+          <div style={{ height: '8px', background: theme === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.75rem' }}>
             <div style={{ 
               height: '100%', 
               width: `${Math.min(100, (well.currentDepthBgl / 30) * 100)}%`, 
@@ -507,7 +517,7 @@ export default function FarmerDashboard({
           </div>
 
           {/* Dual Moisture Progress */}
-          <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+          <div style={{ height: '8px', background: theme === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.75rem' }}>
             <div style={{ 
               height: '100%', 
               width: `${soil.rootZoneMoisture15cm}%`, 
@@ -519,7 +529,7 @@ export default function FarmerDashboard({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Sub-Root (30cm):</span>
-              <span style={{ fontWeight: '600', color: '#38bdf8' }}>{soil.subZoneMoisture30cm}%</span>
+              <span style={{ fontWeight: '600', color: theme === 'light' ? '#0284c7' : '#38bdf8' }}>{soil.subZoneMoisture30cm}%</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Optimal Range:</span>
@@ -545,22 +555,22 @@ export default function FarmerDashboard({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '2rem', fontWeight: '800', color: weather.rainProbabilityPercent >= 50 ? '#38bdf8' : 'var(--text-primary)' }}>
+            <span style={{ fontSize: '2rem', fontWeight: '800', color: weather.rainProbabilityPercent >= 50 ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'var(--text-primary)' }}>
               {weather.rainProbabilityPercent}%
             </span>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>rain probability</span>
           </div>
 
-          <div style={{ fontSize: '0.82rem', color: '#38bdf8', fontWeight: '600', marginBottom: '0.75rem' }}>
+          <div style={{ fontSize: '0.82rem', color: theme === 'light' ? '#0284c7' : '#38bdf8', fontWeight: '600', marginBottom: '0.75rem' }}>
             {weather.rainExpectedNext24h ? `⚡ ${weather.rainAmountMm} mm rain expected next 24h` : '☀ Dry conditions next 24h'}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.35rem', textAlign: 'center', fontSize: '0.72rem' }}>
             {weather.forecastDays.map(f => (
-              <div key={f.day} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '0.35rem', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+              <div key={f.day} style={{ background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.6)', padding: '0.35rem', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                 <div style={{ color: 'var(--text-muted)' }}>{f.day}</div>
-                <div style={{ fontWeight: '700', color: '#f8fafc' }}>{f.rainProb}</div>
-                <div style={{ color: '#38bdf8' }}>{f.rainMm}mm</div>
+                <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{f.rainProb}</div>
+                <div style={{ color: theme === 'light' ? '#0284c7' : '#38bdf8' }}>{f.rainMm}mm</div>
               </div>
             ))}
           </div>
@@ -573,19 +583,19 @@ export default function FarmerDashboard({
               <Zap size={18} color="#f59e0b" />
               <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Pump & Power State</span>
             </div>
-            <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '6px', background: isPumpSimulating ? 'rgba(14, 165, 233, 0.2)' : 'rgba(100, 116, 139, 0.2)', color: isPumpSimulating ? '#38bdf8' : '#94a3b8', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '6px', background: isPumpSimulating ? 'rgba(14, 165, 233, 0.2)' : 'rgba(100, 116, 139, 0.2)', color: isPumpSimulating ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'var(--text-muted)', fontWeight: '700' }}>
               {isPumpSimulating ? 'RUNNING' : 'STANDBY'}
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.4rem' }}>
-            <span style={{ fontSize: '2rem', fontWeight: '800', color: isPumpSimulating ? '#38bdf8' : 'var(--text-primary)' }}>
+            <span style={{ fontSize: '2rem', fontWeight: '800', color: isPumpSimulating ? (theme === 'light' ? '#0284c7' : '#38bdf8') : 'var(--text-primary)' }}>
               {isPumpSimulating ? '45 GPM' : '0 GPM'}
             </span>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>discharge flow</span>
           </div>
 
-          <div style={{ height: '8px', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.75rem' }}>
+          <div style={{ height: '8px', background: theme === 'light' ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.08)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.75rem' }}>
             <div style={{ 
               height: '100%', 
               width: isPumpSimulating ? '85%' : '0%', 
@@ -647,7 +657,7 @@ export default function FarmerDashboard({
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', textAlign: 'left', color: 'var(--text-muted)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--table-header-bg)', textAlign: 'left', color: 'var(--text-muted)' }}>
                 <th style={{ padding: '0.65rem' }}>Date</th>
                 <th style={{ padding: '0.65rem' }}>Crop Stage</th>
                 <th style={{ padding: '0.65rem' }}>Rain Recorded</th>
@@ -658,16 +668,16 @@ export default function FarmerDashboard({
               </tr>
             </thead>
             <tbody>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'transparent' }}>
                 <td style={{ padding: '0.65rem', fontWeight: '600' }}>Today (Scheduled)</td>
                 <td style={{ padding: '0.65rem' }}>Tillering / Vegetative</td>
-                <td style={{ padding: '0.65rem', color: '#38bdf8' }}>{weather.rainAmountMm} mm predicted</td>
+                <td style={{ padding: '0.65rem', color: theme === 'light' ? '#0284c7' : '#38bdf8' }}>{weather.rainAmountMm} mm predicted</td>
                 <td style={{ padding: '0.65rem' }}>{soil.rootZoneMoisture15cm}%</td>
-                <td style={{ padding: '0.65rem', fontWeight: '700', color: '#10b981' }}>{rec.litersToPour} L</td>
+                <td style={{ padding: '0.65rem', fontWeight: '700', color: theme === 'light' ? '#16a34a' : '#10b981' }}>{rec.litersToPour} L</td>
                 <td style={{ padding: '0.65rem' }}>{isPumpSimulating ? `${(simulatedMinutes * 45 * 3.785).toFixed(0)} L` : '0 L (Pending)'}</td>
                 <td style={{ padding: '0.65rem' }}><span className="badge badge-emerald">Optimal</span></td>
               </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'var(--table-row-alt)' }}>
                 <td style={{ padding: '0.65rem' }}>Yesterday</td>
                 <td style={{ padding: '0.65rem' }}>Tillering</td>
                 <td style={{ padding: '0.65rem' }}>0.0 mm</td>
@@ -676,7 +686,7 @@ export default function FarmerDashboard({
                 <td style={{ padding: '0.65rem' }}>0 L</td>
                 <td style={{ padding: '0.65rem' }}><span className="badge badge-emerald">Conserved</span></td>
               </tr>
-              <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-subtle)', background: 'transparent' }}>
                 <td style={{ padding: '0.65rem' }}>2 Days Ago</td>
                 <td style={{ padding: '0.65rem' }}>Tillering</td>
                 <td style={{ padding: '0.65rem' }}>4.2 mm</td>

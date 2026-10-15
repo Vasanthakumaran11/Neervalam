@@ -37,7 +37,8 @@ export default function DistrictAnalytics({
   districts, 
   selectedDistrict, 
   setSelectedDistrict, 
-  onViewDistrictOnMap 
+  onViewDistrictOnMap,
+  theme = 'dark'
 }) {
   const [sortBy, setSortBy] = useState('avgJan25'); // 'avgJan25' | 'avgFluctuation' | 'totalWells' | 'criticalCount'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' | 'desc'
@@ -88,15 +89,15 @@ export default function DistrictAnalytics({
         }),
         borderRadius: 6,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.1)'
+        borderColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.1)'
       },
       {
         label: 'Pre-Monsoon Depth May-24 (m bgl)',
         data: sortedDistricts.slice(0, 16).map(d => d.avgMay24),
-        backgroundColor: 'rgba(148, 163, 184, 0.35)',
+        backgroundColor: theme === 'light' ? 'rgba(148, 163, 184, 0.45)' : 'rgba(148, 163, 184, 0.35)',
         borderRadius: 6,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.05)'
+        borderColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)'
       }
     ]
   };
@@ -108,15 +109,15 @@ export default function DistrictAnalytics({
       legend: {
         position: 'top',
         labels: {
-          color: '#cbd5e1',
+          color: theme === 'light' ? '#334155' : '#cbd5e1',
           font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: '600' }
         }
       },
       tooltip: {
-        backgroundColor: '#0f172a',
-        titleColor: '#f8fafc',
-        bodyColor: '#38bdf8',
-        borderColor: 'rgba(14, 165, 233, 0.4)',
+        backgroundColor: theme === 'light' ? '#ffffff' : '#0f172a',
+        titleColor: theme === 'light' ? '#0f172a' : '#f8fafc',
+        bodyColor: theme === 'light' ? '#0284c7' : '#38bdf8',
+        borderColor: theme === 'light' ? '#cbd5e1' : 'rgba(14, 165, 233, 0.4)',
         borderWidth: 1,
         padding: 10
       }
@@ -126,14 +127,14 @@ export default function DistrictAnalytics({
         title: {
           display: true,
           text: 'Average Depth (m bgl)',
-          color: '#94a3b8'
+          color: theme === 'light' ? '#475569' : '#94a3b8'
         },
-        grid: { color: 'rgba(255, 255, 255, 0.06)' },
-        ticks: { color: '#94a3b8' }
+        grid: { color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: theme === 'light' ? '#475569' : '#94a3b8' }
       },
       x: {
-        grid: { color: 'rgba(255, 255, 255, 0.06)' },
-        ticks: { color: '#cbd5e1', font: { size: 10 } }
+        grid: { color: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: theme === 'light' ? '#334155' : '#cbd5e1', font: { size: 10 } }
       }
     }
   };
@@ -181,8 +182,8 @@ export default function DistrictAnalytics({
                   width: '100%',
                   padding: '0.4rem 0.6rem 0.4rem 1.8rem',
                   borderRadius: '8px',
-                  border: '1px solid var(--border-subtle)',
-                  background: '#1e293b',
+                  border: '1px solid var(--input-border)',
+                  background: 'var(--input-bg)',
                   color: 'var(--text-primary)',
                   fontSize: '0.8rem',
                   outline: 'none'
@@ -197,8 +198,8 @@ export default function DistrictAnalytics({
               style={{
                 padding: '0.4rem 0.75rem',
                 borderRadius: '8px',
-                border: '1px solid var(--border-subtle)',
-                background: '#1e293b',
+                border: '1px solid var(--input-border)',
+                background: 'var(--input-bg)',
                 color: 'var(--text-primary)',
                 fontSize: '0.8rem',
                 outline: 'none',
@@ -332,7 +333,7 @@ export default function DistrictAnalytics({
               maxHeight: '140px', 
               overflowY: 'auto',
               padding: '0.25rem',
-              background: 'rgba(15, 23, 42, 0.4)',
+              background: theme === 'light' ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.4)',
               borderRadius: '8px',
               border: '1px solid var(--border-subtle)'
             }}>
@@ -341,9 +342,15 @@ export default function DistrictAnalytics({
                   key={d.name}
                   onClick={() => setSelectedDistrict(d.name)}
                   style={{
-                    background: activeDistrictData.name === d.name ? '#0284c7' : 'rgba(30, 41, 59, 0.7)',
-                    color: activeDistrictData.name === d.name ? '#ffffff' : '#cbd5e1',
-                    border: '1px solid ' + (activeDistrictData.name === d.name ? '#0ea5e9' : 'transparent'),
+                    background: activeDistrictData.name === d.name 
+                      ? 'var(--cyan-primary)' 
+                      : (theme === 'light' ? '#ffffff' : 'rgba(30, 41, 59, 0.7)'),
+                    color: activeDistrictData.name === d.name 
+                      ? '#ffffff' 
+                      : (theme === 'light' ? '#334155' : '#cbd5e1'),
+                    border: '1px solid ' + (activeDistrictData.name === d.name 
+                      ? 'var(--cyan-primary)' 
+                      : (theme === 'light' ? '#cbd5e1' : 'transparent')),
                     padding: '0.25rem 0.55rem',
                     borderRadius: '6px',
                     fontSize: '0.72rem',
@@ -375,7 +382,7 @@ export default function DistrictAnalytics({
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', textAlign: 'left' }}>
             <thead>
-              <tr style={{ background: '#1e293b', color: '#94a3b8' }}>
+              <tr style={{ background: 'var(--table-header-bg)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <th style={{ padding: '0.65rem 0.85rem' }}>District</th>
                 <th style={{ padding: '0.65rem 0.85rem' }}>Wells Monitored</th>
                 <th style={{ padding: '0.65rem 0.85rem' }}>May-24 (Pre)</th>
@@ -396,8 +403,10 @@ export default function DistrictAnalytics({
                   <tr 
                     key={d.name} 
                     style={{ 
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                      background: isSelected ? 'rgba(14, 165, 233, 0.1)' : (index % 2 === 0 ? 'transparent' : 'rgba(30, 41, 59, 0.2)')
+                      borderBottom: theme === 'light' ? '1px solid #f1f5f9' : '1px solid rgba(255, 255, 255, 0.05)',
+                      background: isSelected 
+                        ? (theme === 'light' ? 'rgba(2, 132, 199, 0.08)' : 'rgba(14, 165, 233, 0.1)') 
+                        : (index % 2 === 0 ? 'transparent' : (theme === 'light' ? 'var(--table-row-alt)' : 'rgba(30, 41, 59, 0.2)'))
                     }}
                   >
                     <td style={{ padding: '0.65rem 0.85rem', fontWeight: '700', color: isSelected ? 'var(--cyan-primary)' : 'var(--text-primary)' }}>

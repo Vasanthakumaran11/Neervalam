@@ -19,9 +19,10 @@ import {
   TrendingDown
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000/api/ai';
+const API_BASE = '/api/ai';
 
-export default function GovernmentDroughtSection() {
+export default function GovernmentDroughtSection({ theme = 'dark' }) {
+  const isLight = theme === 'light';
   // State for controls
   const [district] = useState('Erode');
   const [block, setBlock] = useState('Erode');
@@ -174,7 +175,9 @@ export default function GovernmentDroughtSection() {
         className="glass-card"
         style={{
           padding: '1.5rem',
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)',
+          background: isLight 
+            ? 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)' 
+            : 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%)',
           border: `1px solid ${alertColor}55`,
           boxShadow: alertLevel === 'EMERGENCY' ? `0 0 35px ${alertColor}33` : 'none',
           position: 'relative',
@@ -224,7 +227,7 @@ export default function GovernmentDroughtSection() {
               )}
             </div>
 
-            <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: '#f8fafc', margin: '0.6rem 0 0.2rem 0' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: '800', color: 'var(--text-primary)', margin: '0.6rem 0 0.2rem 0' }}>
               Tamil Nadu CGWB Regional Drought Early Warning Hub
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
@@ -232,7 +235,7 @@ export default function GovernmentDroughtSection() {
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(2, 6, 23, 0.7)', padding: '0.75rem 1.25rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: isLight ? 'var(--bg-card)' : 'rgba(2, 6, 23, 0.7)', padding: '0.75rem 1.25rem', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
                 Composite Drought Risk Index
@@ -241,12 +244,12 @@ export default function GovernmentDroughtSection() {
                 {droughtReport ? `${riskScore}%` : '--'}
               </div>
             </div>
-            <div style={{ width: '1px', height: '36px', background: 'rgba(255,255,255,0.1)' }} />
+            <div style={{ width: '1px', height: '36px', background: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)' }} />
             <div>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700' }}>
                 Dual-Signal Status
               </div>
-              <div style={{ fontSize: '0.95rem', fontWeight: '700', color: dualSignalTriggered ? '#ef4444' : '#10b981' }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: '700', color: dualSignalTriggered ? '#ef4444' : (isLight ? '#16a34a' : '#10b981') }}>
                 {dualSignalTriggered ? 'Triggered (Rain + GW)' : 'Single Signal / Normal'}
               </div>
             </div>
@@ -258,7 +261,7 @@ export default function GovernmentDroughtSection() {
           <div
             style={{
               padding: '0.75rem 1.1rem',
-              background: 'rgba(2, 6, 23, 0.65)',
+              background: isLight ? '#f1f5f9' : 'rgba(2, 6, 23, 0.65)',
               borderRadius: '10px',
               borderLeft: `4px solid ${alertColor}`,
               display: 'flex',
@@ -269,8 +272,8 @@ export default function GovernmentDroughtSection() {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <span style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: '700' }}>தமிழ் அரசு ஆலோசனை:</span>
-              <span style={{ fontSize: '0.9rem', color: '#e2e8f0', fontWeight: '600' }}>
+              <span style={{ fontSize: '0.78rem', color: isLight ? '#0284c7' : '#38bdf8', fontWeight: '700' }}>தமிழ் அரசு ஆலோசனை:</span>
+              <span style={{ fontSize: '0.9rem', color: isLight ? '#0f172a' : '#e2e8f0', fontWeight: '600' }}>
                 {droughtReport.tamil_advisory}
               </span>
             </div>
@@ -294,8 +297,8 @@ export default function GovernmentDroughtSection() {
       >
         {/* Block Selector */}
         <div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: '700', color: '#e2e8f0', marginBottom: '0.5rem' }}>
-            <MapPin size={15} color="#38bdf8" />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+            <MapPin size={15} color={isLight ? '#0284c7' : '#38bdf8'} />
             Select Administrative Block (Erode Pilot):
           </label>
           <select
@@ -305,9 +308,9 @@ export default function GovernmentDroughtSection() {
               width: '100%',
               padding: '0.65rem 0.85rem',
               borderRadius: '10px',
-              background: 'rgba(15, 23, 42, 0.9)',
-              color: '#f8fafc',
-              border: '1px solid var(--border-subtle)',
+              background: 'var(--input-bg)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--input-border)',
               fontSize: '0.9rem',
               fontWeight: '600'
             }}
@@ -324,11 +327,11 @@ export default function GovernmentDroughtSection() {
         {/* Rainfall Deficit Slider */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: '700', color: '#e2e8f0' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
               <CloudRain size={15} color="#0ea5e9" />
               Simulated Rainfall Deficit:
             </label>
-            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: rainfallDeficit >= 40 ? '#ef4444' : rainfallDeficit >= 20 ? '#f59e0b' : '#10b981' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: rainfallDeficit >= 40 ? '#ef4444' : rainfallDeficit >= 20 ? (isLight ? '#d97706' : '#f59e0b') : (isLight ? '#16a34a' : '#10b981') }}>
               {rainfallDeficit > 0 ? `-${rainfallDeficit}%` : `${rainfallDeficit}%`}
             </span>
           </div>
@@ -351,11 +354,11 @@ export default function GovernmentDroughtSection() {
         {/* Temperature Anomaly Slider */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: '700', color: '#e2e8f0' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
               <Thermometer size={15} color="#f59e0b" />
               Temperature Anomaly:
             </label>
-            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: tempAnomaly >= 2.0 ? '#ef4444' : tempAnomaly >= 1.0 ? '#f59e0b' : '#38bdf8' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: tempAnomaly >= 2.0 ? '#ef4444' : tempAnomaly >= 1.0 ? (isLight ? '#d97706' : '#f59e0b') : (isLight ? '#0284c7' : '#38bdf8') }}>
               {tempAnomaly >= 0 ? `+${tempAnomaly}°C` : `${tempAnomaly}°C`}
             </span>
           </div>
@@ -383,7 +386,7 @@ export default function GovernmentDroughtSection() {
         <div className="glass-card" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Building2 size={18} color="#38bdf8" />
+              <Building2 size={18} color={isLight ? '#0284c7' : '#38bdf8'} />
               <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>
                 District Administrative Directives
               </h3>
@@ -402,9 +405,9 @@ export default function GovernmentDroughtSection() {
                   alignItems: 'flex-start',
                   gap: '0.75rem',
                   padding: '0.85rem 1rem',
-                  background: 'rgba(15, 23, 42, 0.65)',
+                  background: isLight ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.65)',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
+                  border: '1px solid var(--border-subtle)'
                 }}
               >
                 <div
@@ -424,7 +427,7 @@ export default function GovernmentDroughtSection() {
                 >
                   {i + 1}
                 </div>
-                <div style={{ fontSize: '0.85rem', color: '#e2e8f0', lineHeight: 1.45 }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.45 }}>
                   {dir}
                 </div>
               </div>
@@ -437,14 +440,14 @@ export default function GovernmentDroughtSection() {
               marginTop: '1.5rem',
               padding: '0.85rem 1rem',
               borderRadius: '10px',
-              background: 'rgba(2, 6, 23, 0.75)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: isLight ? 'var(--bg-secondary)' : 'rgba(2, 6, 23, 0.75)',
+              border: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
               gap: '0.75rem'
             }}
           >
-            <Sparkles size={18} color="#38bdf8" style={{ flexShrink: 0 }} />
+            <Sparkles size={18} color={isLight ? '#0284c7' : '#38bdf8'} style={{ flexShrink: 0 }} />
             <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
               <strong>AI Model Verification:</strong> {droughtReport?.model_used || 'LightGBM Classifier'}.
               Trained across 1,980 historical well-transition records and audited against 2016 severe drought records.
@@ -472,9 +475,9 @@ export default function GovernmentDroughtSection() {
                 key={idx}
                 style={{
                   padding: '0.85rem 1rem',
-                  background: 'rgba(15, 23, 42, 0.65)',
+                  background: isLight ? 'var(--bg-secondary)' : 'rgba(15, 23, 42, 0.65)',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  border: '1px solid var(--border-subtle)',
                   transition: 'all 0.2s ease',
                   cursor: 'pointer'
                 }}
@@ -487,14 +490,14 @@ export default function GovernmentDroughtSection() {
                         fontWeight: '800',
                         padding: '0.15rem 0.5rem',
                         borderRadius: '6px',
-                        background: ars.type.includes('Check') ? 'rgba(14, 165, 233, 0.18)' : ars.type.includes('Pond') ? 'rgba(16, 185, 129, 0.18)' : 'rgba(245, 158, 11, 0.18)',
-                        color: ars.type.includes('Check') ? '#38bdf8' : ars.type.includes('Pond') ? '#34d399' : '#f59e0b',
+                        background: ars.type.includes('Check') ? (isLight ? 'rgba(2, 132, 199, 0.12)' : 'rgba(14, 165, 233, 0.18)') : ars.type.includes('Pond') ? (isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(16, 185, 129, 0.18)') : (isLight ? 'rgba(217, 119, 6, 0.12)' : 'rgba(245, 158, 11, 0.18)'),
+                        color: ars.type.includes('Check') ? (isLight ? '#0284c7' : '#38bdf8') : ars.type.includes('Pond') ? (isLight ? '#16a34a' : '#34d399') : (isLight ? '#d97706' : '#f59e0b'),
                         border: '1px solid currentColor'
                       }}
                     >
                       {ars.type}
                     </span>
-                    <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#f8fafc' }}>
+                    <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                       {ars.name}
                     </span>
                   </div>
@@ -505,7 +508,7 @@ export default function GovernmentDroughtSection() {
                     rel="noreferrer"
                     style={{
                       fontSize: '0.72rem',
-                      color: '#38bdf8',
+                      color: isLight ? '#0284c7' : '#38bdf8',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '0.25rem',
@@ -519,15 +522,15 @@ export default function GovernmentDroughtSection() {
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.76rem', color: 'var(--text-secondary)' }}>
                   <div>
-                    Village: <strong style={{ color: '#e2e8f0' }}>{ars.village}</strong> · Firka: <strong style={{ color: '#e2e8f0' }}>{ars.firka}</strong>
+                    Village: <strong style={{ color: 'var(--text-primary)' }}>{ars.village}</strong> · Firka: <strong style={{ color: 'var(--text-primary)' }}>{ars.firka}</strong>
                   </div>
                   <div>
-                    Recharge Cap: <strong style={{ color: '#34d399' }}>{ars.impact}</strong>
+                    Recharge Cap: <strong style={{ color: isLight ? '#16a34a' : '#34d399' }}>{ars.impact}</strong>
                   </div>
                 </div>
 
-                <div style={{ marginTop: '0.45rem', fontSize: '0.74rem', color: '#94a3b8', background: 'rgba(2, 6, 23, 0.5)', padding: '0.35rem 0.65rem', borderRadius: '6px' }}>
-                  ⚡ Directive: <span style={{ color: '#cbd5e1' }}>{ars.action}</span>
+                <div style={{ marginTop: '0.45rem', fontSize: '0.74rem', color: 'var(--text-muted)', background: isLight ? 'var(--bg-card)' : 'rgba(2, 6, 23, 0.5)', padding: '0.35rem 0.65rem', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  ⚡ Directive: <span style={{ color: 'var(--text-primary)', fontWeight: '500' }}>{ars.action}</span>
                 </div>
               </div>
             ))}

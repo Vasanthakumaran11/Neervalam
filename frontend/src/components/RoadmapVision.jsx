@@ -16,14 +16,17 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 
-export default function RoadmapVision() {
+export default function RoadmapVision({ theme = 'dark' }) {
+  const isLight = theme === 'light';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
       {/* Hero Banner */}
       <div className="glass-card" style={{ 
         padding: '2rem', 
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(14, 165, 233, 0.12) 50%, rgba(139, 92, 246, 0.12) 100%)',
+        background: isLight
+          ? 'linear-gradient(135deg, #ffffff 0%, rgba(14, 165, 233, 0.08) 50%, rgba(139, 92, 246, 0.08) 100%)'
+          : 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(14, 165, 233, 0.12) 50%, rgba(139, 92, 246, 0.12) 100%)',
         position: 'relative',
         overflow: 'hidden'
       }}>
@@ -257,7 +260,7 @@ export default function RoadmapVision() {
       </div>
 
       {/* Dataset Authenticity & Transparency Note */}
-      <div className="glass-card" style={{ padding: '1.5rem', background: 'rgba(15, 23, 42, 0.8)' }}>
+      <div className="glass-card" style={{ padding: '1.5rem', background: isLight ? 'var(--bg-card)' : 'rgba(15, 23, 42, 0.8)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
           <ShieldCheck size={20} color="var(--emerald-safe)" />
           <h4 style={{ fontSize: '1rem', fontWeight: '700' }}>Technical Statement & Data Provenance</h4>
